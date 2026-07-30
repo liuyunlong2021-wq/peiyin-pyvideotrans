@@ -50,6 +50,7 @@ AZURE_TTS = 30
 AI302_TTS = 31
 CAMB_TTS = 32
 TTS_API = 33
+JIUCAI_CLONE_TTS = 34
 
 
 # 支持克隆的渠道
@@ -67,7 +68,8 @@ SUPPORT_CLONE = [
     OMNIVOICE_TTS,
     MOSS_TTS,
     CONFUCIUS_TTS,
-    ZIPVOICE_TTS
+    ZIPVOICE_TTS,
+    JIUCAI_CLONE_TTS
 ]
 
 
@@ -117,7 +119,8 @@ _ID_NAME_DICT = {
     AI302_TTS: ChannelProvider("302.AI", "._ai302tts", key_name="ai302_key", win="ai302"),
     CAMB_TTS: ChannelProvider("CAMB AI TTS", "._cambtts", key_name="camb_api_key", win="cambtts"),
     
-    TTS_API: ChannelProvider(tr("Customize API"), "._ttsapi", key_name="ttsapi_url", win="ttsapi")
+    TTS_API: ChannelProvider(tr("Customize API"), "._ttsapi", key_name="ttsapi_url", win="ttsapi"),
+    JIUCAI_CLONE_TTS: ChannelProvider("韭菜盒子云端克隆", "._jiucaiclone", key_name="jiucai_key", win="jiucai")
 }
 # 强制保持按照每个常量值大小排序
 _ID_NAME_DICT=dict(sorted(_ID_NAME_DICT.items(),key=lambda item:item[0]))

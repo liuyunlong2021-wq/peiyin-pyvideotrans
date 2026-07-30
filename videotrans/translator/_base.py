@@ -45,9 +45,13 @@ class BaseTrans(BaseCon):
         super().__post_init__()
         Path(TEMP_ROOT + f'/translate_cache').mkdir(parents=True, exist_ok=True)
         self.aisendsrt = settings.get('aisendsrt', False) and self.translate_type in translator.AI_TRANS_CHANNELS
-        if self.translate_type==translator.HYMT2_INDEX:
+        if self.translate_type == translator.JIUCAI_DRAMA_INDEX:
+            self.aisendsrt = True
+            self.trans_thread = len(self.text_list)
+        elif self.translate_type==translator.HYMT2_INDEX:
             self.aisendsrt=False
-        if self.aisendsrt:
+            self.trans_thread = int(settings.get('trans_thread', 5))
+        elif self.aisendsrt:
             self.trans_thread = int(settings.get('aitrans_thread', 20)) if not settings.get('aitrans_context') else len(self.text_list)
         else:
             self.trans_thread = int(settings.get('trans_thread', 5))

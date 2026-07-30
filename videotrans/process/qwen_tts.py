@@ -31,6 +31,9 @@ def qwen3tts_fun(
         device_map = f'cuda:{device_index}'
         # qwen_tts 在cuda加速时可能遇到 device-side assert triggered 报错，改为 float32 或  bfloat16 类型可解决
         dtype=torch.float32 if not torch.cuda.is_bf16_supported() else torch.bfloat16
+    elif torch.backends.mps.is_available():
+        device_map = 'mps'
+        dtype = torch.float32
     else:
         device_map = 'cpu'
         dtype=torch.float32

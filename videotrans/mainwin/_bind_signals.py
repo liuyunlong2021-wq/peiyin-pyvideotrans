@@ -49,6 +49,7 @@ class BindSignalsMixin:
         self.actioncamb_key.triggered.connect(lambda: self.open_winform('cambtts'))
         self.actiontencent_key.triggered.connect(lambda: self.open_winform('tencent'))
         self.actionchatgpt_key.triggered.connect(lambda: self.open_winform('chatgpt'))
+        self.actionjiucai_key.triggered.connect(lambda: self.open_winform('jiucai'))
         self.actionlibretranslate_key.triggered.connect(lambda: self.open_winform('libre'))
         self.actionai302_key.triggered.connect(lambda: self.open_winform('ai302'))
         self.actionlocalllm_key.triggered.connect(lambda: self.open_winform('localllm'))

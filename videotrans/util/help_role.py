@@ -221,6 +221,7 @@ def get_qwen3tts_rolelist():
 # 本地qwentts3
 def get_qwenttslocal_rolelist():
     voices = {
+        "clone": "clone",
         "Vivian": "Vivian",
         "Serena": "Serena",
         "Uncle_fu": "Uncle_fu",
@@ -377,6 +378,9 @@ def role_menu(tts_type, langcode=None) -> List:
         _list = params.get("clone_voicelist")
         return ['No'] if not isinstance(_list, list) else _list
 
+    if tts_type == tts.JIUCAI_CLONE_TTS:
+        return ['No', 'clone']
+
     if tts_type == tts.CHATTTS:
         return ['No'] + list(settings.ChatTTS_voicelist)
 
@@ -425,5 +429,3 @@ def role_menu(tts_type, langcode=None) -> List:
     if not _roles:
         return ['No']
     return _roles if isinstance(_roles, list) else list(_roles.keys())
-
-

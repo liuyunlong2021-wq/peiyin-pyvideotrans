@@ -9,9 +9,10 @@ import os
 from videotrans.configure.config import tr, ROOT_DIR, settings, logger
 from videotrans.configure.excepts import SpeechToTextError
 from videotrans.recognition import run as run_recogn, is_allow_lang as recogn_allow_lang, FASTER_WHISPER
+from videotrans.tts import JIUCAI_CLONE_TTS
 from videotrans.util.help_ffmpeg import conver_to_16k, runffmpeg, cut_from_audio
 from videotrans.util.help_misc import vail_file
-from videotrans.util.help_srt import get_subtitle_from_srt, delete_punc
+from videotrans.util.help_srt import get_subtitle_from_srt, delete_punc, ms_to_time_string
 
 
 class RecognMixin:
@@ -250,18 +251,29 @@ class RecognMixin:
             except Exception as e:
                 logger.exception(f'克隆语音前分离出 44.1k 的原始音频失败',exc_info=True)
 
+        if not Path(vocal).is_file():
+            raise RuntimeError('声音克隆参考音频不存在，请重新开始任务')
+
         logger.debug(f'语音克隆模式下，所用参考音频为:{vocal}')
         def _cutaudio_from_vocal(it):
-            try:
-                logger.debug(f"裁切对应片段为参考音频：{it['startraw']}->{it['endraw']}\n当前{it=}")
-                cut_from_audio(
-                    audio_file=vocal,
-                    ss=it['startraw'],
-                    to=it['endraw'],
-                    out_file=it['ref_wav']
-                )
-            except Exception as e:
-                logger.exception(f'裁切参考音频失败:{it=},{e}', exc_info=True)
+            logger.debug(f"裁切对应片段为参考音频：{it['startraw']}->{it['endraw']}\n当前{it=}")
+            ss, to = it['startraw'], it['endraw']
+            if self.cfg.tts_type == JIUCAI_CLONE_TTS:
+                start = int(it.get('start_time_source', it['start_time']))
+                end = int(it.get('end_time_source', it['end_time']))
+                if end - start < 600:
+                    padding = 600 - (end - start)
+                    ss = max(0, start - padding // 2)
+                    to = end + padding - padding // 2
+                    ss = ms_to_time_string(ms=ss)
+                    to = ms_to_time_string(ms=to)
+            if not cut_from_audio(
+                audio_file=vocal,
+                ss=ss,
+                to=to,
+                out_file=it['ref_wav']
+            ) or not Path(it['ref_wav']).is_file():
+                raise RuntimeError(f"第 {it['line']} 句参考音频裁切失败，请重新开始任务")
 
         all_task = []
         with ThreadPoolExecutor(max_workers=min(8, len(self.queue_tts), os.cpu_count())) as pool:

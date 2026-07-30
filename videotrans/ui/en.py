@@ -353,6 +353,7 @@ class Ui_MainWindow(object):
         self.actionali_key.setText(tr("Alibaba Translation"))
         self.actionchatgpt_key.setText(
             tr("OpenAI API & Compatible AI"))
+        self.actionjiucai_key.setText("韭菜盒子 API（剧情翻译 / 声音克隆）")
         self.actionzhipuai_key.setText(tr("Zhipu AI"))
         self.actionsiliconflow_key.setText(tr("SiliconFlow"))
         self.actiondeepseek_key.setText('DeepSeek')

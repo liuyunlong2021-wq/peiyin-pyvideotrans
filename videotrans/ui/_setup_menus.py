@@ -60,6 +60,7 @@ def _setup_actions_and_menus(ui, MainWindow):
     _make_action(ui, "actionbaidu_key")
     _make_action(ui, "actionali_key")
     _make_action(ui, "actionchatgpt_key")
+    _make_action(ui, "actionjiucai_key")
     _make_action(ui, "actionzhipuai_key")
     _make_action(ui, "actionsiliconflow_key")
     _make_action(ui, "actiondeepseek_key")
@@ -153,7 +154,7 @@ def _setup_actions_and_menus(ui, MainWindow):
 
     _fill_menu(ui.menu_Key, [
         ui.actionbaidu_key, ui.actionali_key, ui.actiontencent_key,
-        ui.actionai302_key, ui.actionchatgpt_key, ui.actionlocalllm_key,
+        ui.actionai302_key, ui.actionchatgpt_key, ui.actionjiucai_key, ui.actionlocalllm_key,
         ui.actionzhipuai_key, ui.actionsiliconflow_key, ui.actiondeepseek_key,
         ui.actionxiaomi_key, ui.actionminimax_key, ui.actionqwenmt_key,
         ui.actionopenrouter_key, ui.actionlibretranslate_key,
@@ -168,7 +169,7 @@ def _setup_actions_and_menus(ui, MainWindow):
         ui.actiontts_cosyvoice, ui.actiontts_qwenttslocal, ui.actionqwentts_key,
         ui.actiontts_fishtts, ui.actiontts_gradiowin, ui.actionai302_key,
         ui.actiontts_doubao2, ui.actionElevenlabs_key, ui.actionazure_tts,
-        ui.actionxaitts_key, ui.actionopenaitts_key, ui.actionminimaxi_api,
+        ui.actionxaitts_key, ui.actionopenaitts_key, ui.actionjiucai_key, ui.actionminimaxi_api,
         ui.actiontts_api, ui.actiontts_chatterbox,
     ])
 

@@ -16,7 +16,7 @@ class QwenttsLocal(BaseTTS):
     
     def __post_init__(self):
         super().__post_init__()
-        self.model_name="0.6B"
+        self.model_name="1.7B"
         _langnames = translator.LANG_CODE.get(self.language, [])
         self.target_language = _langnames[9].capitalize() if _langnames and len(_langnames) >= 10 else 'Auto'
 
@@ -27,8 +27,9 @@ class QwenttsLocal(BaseTTS):
             self.local_dir=f'{ROOT_DIR}/models/models--Qwen--Qwen3-TTS-12Hz-{self.model_name}-Base'
             help_down.check_and_down_ms(f'Qwen/Qwen3-TTS-12Hz-{self.model_name}-Base',callback=self._process_callback,local_dir=self.local_dir)
             
-            self.local_dir=f'{ROOT_DIR}/models/models--Qwen--Qwen3-TTS-12Hz-{self.model_name}-CustomVoice'
-            help_down.check_and_down_ms(f'Qwen/Qwen3-TTS-12Hz-{self.model_name}-CustomVoice',callback=self._process_callback,local_dir=self.local_dir)
+            if any(item.get('role') in {"Vivian", "Serena", "Uncle_fu", "Dylan", "Eric", "Ryan", "Aiden", "Ono_anna", "Sohee"} for item in self.queue_tts):
+                self.local_dir=f'{ROOT_DIR}/models/models--Qwen--Qwen3-TTS-12Hz-{self.model_name}-CustomVoice'
+                help_down.check_and_down_ms(f'Qwen/Qwen3-TTS-12Hz-{self.model_name}-CustomVoice',callback=self._process_callback,local_dir=self.local_dir)
         else:
             self.local_dir=f'{ROOT_DIR}/models/models--Qwen--Qwen3-TTS-12Hz-{self.model_name}-Base'
             help_down.check_and_down_hf(model_id=f'Qwen3-TTS-12Hz-{self.model_name}-Base',repo_id=f'Qwen/Qwen3-TTS-12Hz-{self.model_name}-Base',local_dir=self.local_dir,callback=self._process_callback)
@@ -64,5 +65,4 @@ class QwenttsLocal(BaseTTS):
                 _ = [i.result() for i in all_task]
             else:
                 self.error="No dubbing audio generate, view logs"
-
 

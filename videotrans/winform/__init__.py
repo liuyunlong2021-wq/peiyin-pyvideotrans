@@ -39,6 +39,7 @@ _module_map = {
 "gemini":".gemini",
 "gptsovits":".gptsovits",
 "kokoro":".kokoro",
+"jiucai":".jiucai",
 "libre":".libre",
 "localllm":".localllm",
 "minimaxi":".minimaxi",#tts
