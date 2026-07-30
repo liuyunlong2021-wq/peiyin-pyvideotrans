@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 
 from videotrans.configure.config import ROOT_DIR, tr, app_cfg, settings, logger
 from videotrans.configure import config
+from videotrans.tts import QWEN3LOCAL_TTS
 from videotrans.util import tools
 
 
@@ -31,7 +32,8 @@ class SpeakerAssignmentDialog(QDialog):
             novoice_mp4: str = None,#原始视频中分离出的无声视频，用于播放
             all_voices: Optional[List[str]] = None,#所有角色列表
             cache_folder=None,#缓存目录
-            tts_type=0#当前配音渠道ID
+            tts_type=0,#当前配音渠道ID
+            voice_role='No'
     ):
         super().__init__()
         self.parent = parent
@@ -41,6 +43,9 @@ class SpeakerAssignmentDialog(QDialog):
         self.cache_folder = cache_folder
         self.target_language = target_language
         self.tts_type = tts_type
+        self.voice_role = voice_role
+        self.clone_review_mode = tts_type == QWEN3LOCAL_TTS \
+            and str(voice_role).strip().lower() == 'clone'
         self.source_wav = source_wav
         self.novoice_mp4 = novoice_mp4
         self._target_end_ms = -1
@@ -63,15 +68,15 @@ class SpeakerAssignmentDialog(QDialog):
             spk_json_path = Path(f'{self.cache_folder}/speaker.json')
             _list_sub = [] if not spk_json_path.exists() else json.loads(spk_json_path.read_text(encoding='utf-8'))
             _set = set(_list_sub) if _list_sub else None
+            self.speaker_list_sub = _list_sub
             if _set and len(_set) > 1:
-                self.speaker_list_sub = _list_sub
                 self.speakers = {it: None for it in sorted(list(_set))}
         except Exception as e:
             logger.exception(f'获取说话人id失败:{e}', exc_info=True)
 
         self.all_voices = all_voices or []
 
-        self.setWindowTitle(tr("zidonghebingmiaohou"))
+        self.setWindowTitle(tr("Step 2 review English and speaking turns") if self.clone_review_mode else tr("zidonghebingmiaohou"))
         self.setWindowIcon(QIcon(f"{ROOT_DIR}/videotrans/styles/icon.ico"))
         self.setMinimumWidth(1200)
         self.setMinimumHeight(700)
@@ -84,59 +89,77 @@ class SpeakerAssignmentDialog(QDialog):
 
         main_layout = QVBoxLayout(self)
         
-        # --- 顶部：倒计时与提示 ---
+        # --- 顶部：状态与查找替换 ---
         self.count_down = int(float(settings.get('countdown_sec', 1)))
-        top_layout = QVBoxLayout()
-        hstop = QHBoxLayout()
-
-        self.prompt_label = QLabel(tr("This window will automatically close after the countdown ends"))
-        self.prompt_label.setStyleSheet('font-size:14px;color:#aaaaaa')
-        self.prompt_label.setWordWrap(True)
-        hstop.addWidget(self.prompt_label)
-
-        self.stop_button = QPushButton(f"{tr('Click here to stop the countdown')}({self.count_down})")
-        self.stop_button.setStyleSheet("font-size: 16px;color:#ffff00")
-        self.stop_button.setCursor(Qt.PointingHandCursor)
-        self.stop_button.setMinimumSize(QSize(300, 35))
-        self.stop_button.clicked.connect(self.stop_countdown)
-        hstop.addWidget(self.stop_button)
-
-        top_layout.addLayout(hstop)
-        prompt_label2 = QLabel(tr("If you need to delete a line of subtitles, just clear the text in that line"))
-        prompt_label2.setAlignment(Qt.AlignCenter)
-        prompt_label2.setStyleSheet("color: #dddddd")
-        prompt_label2.setWordWrap(True)
-        top_layout.addWidget(prompt_label2)
-        main_layout.addLayout(top_layout)
-
-        # --- 查找替换区域 ---
-        search_replace_layout = QHBoxLayout()
-        search_replace_layout.addStretch()
+        self.timer = None
+        self.prompt_label = None
+        self.stop_button = None
+        self.turn_summary = QLabel()
+        self.turn_summary.setStyleSheet("color:#64c879;font-size:14px;font-weight:600")
         self.search_input = QLineEdit()
         self.search_input.setMaximumWidth(200)
-        self.search_input.setPlaceholderText(tr("Original text"))
-        search_replace_layout.addWidget(self.search_input)
+        self.search_input.setPlaceholderText(tr("Find in English subtitles"))
+        self.search_input.textEdited.connect(self.stop_countdown)
         self.replace_input = QLineEdit()
         self.replace_input.setPlaceholderText(tr("Replace"))
+        self.replace_input.textEdited.connect(self.stop_countdown)
         self.replace_input.setMaximumWidth(200)
-        search_replace_layout.addWidget(self.replace_input)
         replace_button = QPushButton(tr("Replace"))
         replace_button.setMinimumWidth(100)
         replace_button.setMaximumWidth(200)
         replace_button.setCursor(Qt.PointingHandCursor)
         replace_button.clicked.connect(self.replace_text)
-        search_replace_layout.addWidget(replace_button)
-        search_replace_layout.addStretch()
-        main_layout.addLayout(search_replace_layout)
+
+        if self.clone_review_mode:
+            header_layout = QHBoxLayout()
+            stage_label = QLabel(tr("Step 2 review English and speaking turns"))
+            stage_label.setStyleSheet("font-size:16px;font-weight:600;color:#64c879")
+            header_layout.addWidget(stage_label)
+            header_layout.addWidget(self.turn_summary)
+            header_layout.addStretch()
+            header_layout.addWidget(self.search_input)
+            header_layout.addWidget(self.replace_input)
+            header_layout.addWidget(replace_button)
+            main_layout.addLayout(header_layout)
+        else:
+            top_layout = QVBoxLayout()
+            hstop = QHBoxLayout()
+            self.prompt_label = QLabel(tr("This window will automatically close after the countdown ends"))
+            self.prompt_label.setStyleSheet('font-size:14px;color:#aaaaaa')
+            self.prompt_label.setWordWrap(True)
+            hstop.addWidget(self.prompt_label)
+            self.stop_button = QPushButton(f"{tr('Click here to stop the countdown')}({self.count_down})")
+            self.stop_button.setStyleSheet("font-size: 16px;color:#ffff00")
+            self.stop_button.setCursor(Qt.PointingHandCursor)
+            self.stop_button.setMinimumSize(QSize(300, 35))
+            self.stop_button.clicked.connect(self.stop_countdown)
+            hstop.addWidget(self.stop_button)
+            top_layout.addLayout(hstop)
+            prompt_label2 = QLabel(tr("If you need to delete a line of subtitles, just clear the text in that line"))
+            prompt_label2.setAlignment(Qt.AlignCenter)
+            prompt_label2.setStyleSheet("color: #dddddd")
+            prompt_label2.setWordWrap(True)
+            top_layout.addWidget(prompt_label2)
+            self.turn_summary.setAlignment(Qt.AlignCenter)
+            top_layout.addWidget(self.turn_summary)
+            main_layout.addLayout(top_layout)
+
+            search_replace_layout = QHBoxLayout()
+            search_replace_layout.addStretch()
+            search_replace_layout.addWidget(self.search_input)
+            search_replace_layout.addWidget(self.replace_input)
+            search_replace_layout.addWidget(replace_button)
+            search_replace_layout.addStretch()
+            main_layout.addLayout(search_replace_layout)
 
         # ===================== Splitter: video (top) + content (bottom) =====================
-        self.splitter = QSplitter(Qt.Vertical)
+        self.splitter = QSplitter(Qt.Horizontal if self.clone_review_mode else Qt.Vertical)
         self.splitter.setHandleWidth(6)
 
         # --- Top area: video display (players created lazily on first play) ---
         self.video_widget = QVideoWidget()
         self.video_widget.setStyleSheet("background-color: #1a1a1a;")
-        self.video_widget.setMinimumHeight(150)
+        self.video_widget.setMinimumHeight(440 if self.clone_review_mode else 150)
 
         self.video_hint = QLabel(tr("Click on a subtitle below to play video"))
         self.video_hint.setStyleSheet("color:#ffcc00; font-size:14px; background-color:transparent;")
@@ -157,6 +180,9 @@ class SpeakerAssignmentDialog(QDialog):
         top_layout.setContentsMargins(0, 0, 0, 0)
         top_layout.addWidget(self.video_status)
         top_layout.addLayout(self._stack, 1)
+        if self.clone_review_mode:
+            top_container.setMinimumWidth(250)
+            top_container.setMaximumWidth(320)
         self.splitter.addWidget(top_container)
 
         # --- Bottom area: content (existing layout) ---
@@ -185,14 +211,21 @@ class SpeakerAssignmentDialog(QDialog):
         self.content_layout.addWidget(self.bottom_button_container)
 
         self.splitter.addWidget(bottom_container)
-        self.splitter.setSizes([int(parent.height * 0.22), int(parent.height * 0.68)])
+        if self.clone_review_mode:
+            self.splitter.setSizes([280, 920])
+            self.splitter.setStretchFactor(0, 0)
+            self.splitter.setStretchFactor(1, 1)
+        else:
+            self.splitter.setSizes([int(parent.height * 0.22), int(parent.height * 0.68)])
         main_layout.addWidget(self.splitter, 1)
 
         # --- 底部按钮 ---
-        self.save_button = QPushButton(tr("nextstep"))
+        self.save_button = QPushButton(tr("Confirm subtitles and grouping, start dubbing") if self.clone_review_mode else tr("Save translation and grouping, start dubbing"))
         self.save_button.setCursor(Qt.PointingHandCursor)
         self.save_button.setMinimumSize(QSize(300, 35))
         self.save_button.clicked.connect(self.save_and_close)
+        if self.clone_review_mode:
+            self.save_button.setStyleSheet("QPushButton{background:#2f8f46;color:white;font-weight:600;border:none;padding:7px 16px;} QPushButton:hover{background:#38a653;}")
 
         self.save_button2 = QPushButton(tr("nosaveandstep"))
         self.save_button2.setCursor(Qt.PointingHandCursor)
@@ -212,12 +245,20 @@ class SpeakerAssignmentDialog(QDialog):
         cancel_button.clicked.connect(self.cancel_and_close)
 
         bottom_layout = QHBoxLayout()
-        bottom_layout.addStretch()
-        bottom_layout.addWidget(self.save_button)
-        bottom_layout.addWidget(self.save_button2)
-        bottom_layout.addWidget(self.opendir_button)
-        bottom_layout.addWidget(cancel_button)
-        bottom_layout.addStretch()
+        if self.clone_review_mode:
+            cancel_button.setStyleSheet("background:transparent;color:#d97777")
+            bottom_layout.addWidget(cancel_button)
+            bottom_layout.addWidget(self.opendir_button)
+            bottom_layout.addStretch()
+            bottom_layout.addWidget(self.save_button)
+            self.save_button2.hide()
+        else:
+            bottom_layout.addStretch()
+            bottom_layout.addWidget(self.save_button)
+            bottom_layout.addWidget(self.save_button2)
+            bottom_layout.addWidget(self.opendir_button)
+            bottom_layout.addWidget(cancel_button)
+            bottom_layout.addStretch()
 
         main_layout.addLayout(bottom_layout)
 
@@ -237,22 +278,25 @@ class SpeakerAssignmentDialog(QDialog):
             self.table = QTableWidget()
             
             # 2. 【极致性能配置】禁用所有非必要功能
-            self.table.setColumnCount(8)
-            self.table.setHorizontalHeaderLabels(["Sel", tr("Line"), tr('Speaker'), tr("Dubbing role"), tr("Time Axis"), "\u23F5", tr("Subtitle Text"),tr("SourceLang Text")])
+            self.table.setColumnCount(9)
+            self.table.setHorizontalHeaderLabels([
+                "Sel", tr("Line"), tr('Character suggestion') if self.clone_review_mode else tr('Speaker'),
+                tr("Join previous"), tr("Dubbing role"), tr("Time Axis"), "\u23F5",
+                tr("Subtitle Text"), tr("SourceLang Text")
+            ])
             
             # 禁用所有视觉效果
             self.table.setAlternatingRowColors(False)
             self.table.setShowGrid(False)  # 不显示网格线
             
-            # 禁用选择
-            self.table.setSelectionMode(QAbstractItemView.NoSelection)
+            self.table.setSelectionMode(QAbstractItemView.SingleSelection)
             self.table.setSelectionBehavior(QAbstractItemView.SelectItems)
-            
-            # 禁用焦点
-            self.table.setFocusPolicy(Qt.NoFocus)
+            self.table.setFocusPolicy(Qt.StrongFocus)
+            self.table.setEditTriggers(QAbstractItemView.DoubleClicked | QAbstractItemView.SelectedClicked)
+            self.table.cellClicked.connect(lambda _row, _column: self.stop_countdown())
             
             # 固定行高，避免动态计算
-            self.table.verticalHeader().setDefaultSectionSize(22)
+            self.table.verticalHeader().setDefaultSectionSize(38 if self.clone_review_mode else 22)
             self.table.verticalHeader().setVisible(False)
             
             # 列宽设置
@@ -260,19 +304,28 @@ class SpeakerAssignmentDialog(QDialog):
             header.setSectionResizeMode(0, QHeaderView.Fixed)  # Sel
             header.setSectionResizeMode(1, QHeaderView.Fixed)  # ID
             header.setSectionResizeMode(2, QHeaderView.Fixed)  # Spk
-            header.setSectionResizeMode(3, QHeaderView.Fixed)  # Role
-            header.setSectionResizeMode(4, QHeaderView.Fixed)  # Time
-            header.setSectionResizeMode(5, QHeaderView.Fixed)  # Play
-            header.setSectionResizeMode(6, QHeaderView.Stretch)  # Text
-            header.setSectionResizeMode(7, QHeaderView.Fixed)  # SourceText
+            header.setSectionResizeMode(3, QHeaderView.Fixed)  # Join
+            header.setSectionResizeMode(4, QHeaderView.Fixed)  # Role
+            header.setSectionResizeMode(5, QHeaderView.Fixed)  # Time
+            header.setSectionResizeMode(6, QHeaderView.Fixed)  # Play
+            header.setSectionResizeMode(7, QHeaderView.Stretch)  # Text
+            header.setSectionResizeMode(8, QHeaderView.Fixed)  # SourceText
             
             self.table.setColumnWidth(0, 30)
             self.table.setColumnWidth(1, 40)
             self.table.setColumnWidth(2, 50)
-            self.table.setColumnWidth(3, 150)
-            self.table.setColumnWidth(4, 180)
-            self.table.setColumnWidth(5, 30)
-            self.table.setColumnWidth(7, 300)
+            self.table.setColumnWidth(3, 70)
+            self.table.setColumnWidth(4, 150)
+            self.table.setColumnWidth(5, 180)
+            self.table.setColumnWidth(6, 30)
+            self.table.setColumnWidth(8, 300)
+            if self.clone_review_mode:
+                self.table.setColumnHidden(0, True)
+                self.table.setColumnHidden(4, True)
+                self.table.setColumnWidth(2, 90)
+                self.table.setColumnWidth(3, 70)
+                self.table.setColumnWidth(5, 125)
+                header.setSectionResizeMode(8, QHeaderView.Stretch)
             
             # 最小样式
             self.table.setStyleSheet("""
@@ -311,19 +364,61 @@ class SpeakerAssignmentDialog(QDialog):
             # 3. 预计算所有显示数据
             speaker_keys = list(self.speakers.keys()) if self.speakers else []
             default_spk = speaker_keys[0] if speaker_keys else ''
+            speaker_aliases = {}
+            for speaker in self.speaker_list_sub:
+                if speaker and speaker not in speaker_aliases:
+                    speaker_aliases[speaker] = f'Speaker{len(speaker_aliases) + 1}'
             
             self.display_data = []
+            turns_path = Path(self.target_sub).parent / 'turns.json'
+            saved_turns = None
+            try:
+                candidate = json.loads(turns_path.read_text(encoding='utf-8')) if turns_path.is_file() else None
+                if isinstance(candidate, list) and len(candidate) == len(self.srt_list_dict) \
+                        and all(isinstance(value, bool) for value in candidate):
+                    saved_turns = candidate
+            except (OSError, json.JSONDecodeError):
+                pass
+            turn_suggestions = None
+            suggestion_path = Path(self.cache_folder) / 'turn_suggestions.json'
+            try:
+                if suggestion_path.is_file():
+                    from videotrans.translator._jiucai import parse_turn_suggestions
+                    turn_suggestions = parse_turn_suggestions(
+                        suggestion_path.read_text(encoding='utf-8'),
+                        [item['line'] for item in self.srt_list_dict],
+                    )
+            except (OSError, ValueError, json.JSONDecodeError):
+                pass
             for i, item in enumerate(self.srt_list_dict):
                 # Speaker ID
-                if self.speakers and i < len(self.speaker_list_sub):
-                    spk = self.speaker_list_sub[i]
+                if self.clone_review_mode and turn_suggestions:
+                    spk = turn_suggestions[i]['speaker']
+                elif i < len(self.speaker_list_sub):
+                    raw_speaker = self.speaker_list_sub[i]
+                    spk = speaker_aliases.get(raw_speaker, raw_speaker) if self.clone_review_mode else raw_speaker
                 else:
                     spk = default_spk if self.speakers else ''
                 
                 # 时间字符串
                 duration = (item['end_time'] - item['start_time']) / 1000.0
-                time_str = f"{item['startraw']}->{item['endraw']}({duration:.1f}s)"
+                if self.clone_review_mode:
+                    start_s, end_s = item['start_time'] / 1000, item['end_time'] / 1000
+                    time_str = f'{int(start_s // 60):02d}:{start_s % 60:04.1f}–{int(end_s // 60):02d}:{end_s % 60:04.1f}'
+                else:
+                    time_str = f"{item['startraw']}->{item['endraw']}({duration:.1f}s)"
                 
+                source_items = self.source_srt_list_dict or self.srt_list_dict
+                same_speaker = i > 0 and i < len(self.speaker_list_sub) \
+                    and self.speaker_list_sub[i] == self.speaker_list_sub[i - 1]
+                gap = source_items[i]['start_time'] - source_items[i - 1]['end_time'] \
+                    if 0 < i < len(source_items) else -1
+                if saved_turns is not None:
+                    join_previous = saved_turns[i]
+                elif turn_suggestions:
+                    join_previous = turn_suggestions[i]['join_previous']
+                else:
+                    join_previous = same_speaker and 0 <= gap <= 1000
                 self.display_data.append({
                     'line': item['line'],
                     'spk': spk,
@@ -335,7 +430,8 @@ class SpeakerAssignmentDialog(QDialog):
                     'start_time': item['start_time'],
                     'end_time': item['end_time'],
                     'checked': False,
-                    'role': ''
+                    'role': '',
+                    'join_previous': bool(join_previous) if i else False
                 })
             
             # 4. 设置行数
@@ -354,14 +450,15 @@ class SpeakerAssignmentDialog(QDialog):
             # 8. 显示表格
             self.loading_widget.setVisible(False)
             self.table_container.setVisible(True)
-            self.bottom_button_container.setVisible(True)
+            self.bottom_button_container.setVisible(not self.clone_review_mode)
             
             # 8. 启动倒计时
-            self.timer = QTimer(self)
-            self.timer.timeout.connect(self.update_countdown)
-            self.timer.start(1000)
             self._active()
-            self._play_segment(0,5)
+            if not self.clone_review_mode:
+                self.timer = QTimer(self)
+                self.timer.timeout.connect(self.update_countdown)
+                self.timer.start(1000)
+                self._play_segment(0,5)
             
         except Exception as e:
             import traceback
@@ -388,35 +485,41 @@ class SpeakerAssignmentDialog(QDialog):
             spk_item = QTableWidgetItem(data['spk'])
             spk_item.setFlags(Qt.ItemIsEnabled)
             self.table.setItem(row, 2, spk_item)
-            
-            # 第3列：Role（只读，显示用）
+
+            # 第3列：接上句
+            join_item = QTableWidgetItem()
+            join_item.setFlags(Qt.ItemIsEnabled if row == 0 else Qt.ItemIsEnabled | Qt.ItemIsUserCheckable)
+            join_item.setCheckState(Qt.Checked if data['join_previous'] else Qt.Unchecked)
+            self.table.setItem(row, 3, join_item)
+
+            # 第4列：Role（只读，显示用）
             role_item = QTableWidgetItem(tr('Default Role'))
             role_item.setFlags(Qt.ItemIsEnabled)
             role_item.setForeground(QColor("#ff4d4d"))
-            self.table.setItem(row, 3, role_item)
+            self.table.setItem(row, 4, role_item)
             
-            # 第4列：Time（只读）
+            # 第5列：Time（只读）
             time_item = QTableWidgetItem(data['time_str'])
             time_item.setFlags(Qt.ItemIsEnabled)
-            self.table.setItem(row, 4, time_item)
+            self.table.setItem(row, 5, time_item)
             
-            # 第5列：Play button
+            # 第6列：Play button
             btn = QPushButton("\u23F5")
             btn.setObjectName("playBtn")
             btn.setCursor(Qt.PointingHandCursor)
             s = data['start_time']
             e = data['end_time']
-            btn.clicked.connect(lambda checked=False, _s=s, _e=e: self._play_segment(_s, _e))
-            self.table.setCellWidget(row, 5, btn)
+            btn.clicked.connect(lambda checked=False, _s=s, _e=e: (self.stop_countdown(), self._play_segment(_s, _e)))
+            self.table.setCellWidget(row, 6, btn)
             
-            # 第6列：Text（可编辑）
+            # 第7列：Text（可编辑）
             text_item = QTableWidgetItem(data['text'])
             text_item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsEditable | Qt.ItemIsSelectable)
-            self.table.setItem(row, 6, text_item)
+            self.table.setItem(row, 7, text_item)
             
             origin_text_item = QTableWidgetItem(data['origin_text'])
             origin_text_item.setFlags(Qt.ItemIsEnabled)
-            self.table.setItem(row, 7, origin_text_item)
+            self.table.setItem(row, 8, origin_text_item)
 
     def _load_remaining_rows(self, start_row):
         """延迟加载剩余行 - 避免界面冻结"""
@@ -429,9 +532,40 @@ class SpeakerAssignmentDialog(QDialog):
         if end_row < total:
             # 还有数据，继续加载
             QTimer.singleShot(0, lambda: self._load_remaining_rows(end_row))
+        else:
+            self.table.itemChanged.connect(self._table_item_changed)
+            self._refresh_turn_groups()
+
+    def _table_item_changed(self, item):
+        self.stop_countdown()
+        if item.column() == 3:
+            self._refresh_turn_groups()
+
+    def _refresh_turn_groups(self):
+        if not hasattr(self, 'table'):
+            return
+        self.table.blockSignals(True)
+        group = -1
+        for row in range(self.table.rowCount()):
+            join_item = self.table.item(row, 3)
+            if row == 0 or not join_item or join_item.checkState() != Qt.Checked:
+                group += 1
+            if self.clone_review_mode:
+                color = QColor("#20352a" if group % 2 == 0 else "#26323a")
+            else:
+                color = QColor("#25313a" if group % 2 == 0 else "#332d3b")
+            for column in range(self.table.columnCount()):
+                item = self.table.item(row, column)
+                if item:
+                    item.setBackground(color)
+        self.table.blockSignals(False)
+        summary_key = "Subtitle and clone turn summary" if self.clone_review_mode else "Subtitle and dubbing turn summary"
+        self.turn_summary.setText(tr(summary_key, self.table.rowCount(), group + 1))
 
     def _setup_bottom_buttons(self):
         """设置底部按钮区域"""
+        if self.clone_review_mode:
+            return
         # 如果有说话人，添加说话人分配区域
         if self.speakers:
             speaker_widget = self._create_speaker_assignment_area()
@@ -536,7 +670,7 @@ class SpeakerAssignmentDialog(QDialog):
             if not role and data['spk']:
                 role = self.speakers.get(data['spk'], '')
             
-            item = self.table.item(row, 3)
+            item = self.table.item(row, 4)
             if item:
                 item.setText(role if role else tr('Default Role'))
 
@@ -567,7 +701,7 @@ class SpeakerAssignmentDialog(QDialog):
             if search_text in data['text']:
                 new_text = data['text'].replace(search_text, replace_text)
                 data['text'] = new_text
-                item = self.table.item(row, 6)
+                item = self.table.item(row, 7)
                 if item:
                     item.setText(new_text)
         
@@ -771,7 +905,7 @@ class SpeakerAssignmentDialog(QDialog):
         speaker_keys = list(self.speakers.keys()) if self.speakers else []
         for row, data in enumerate(self.display_data):
             # 获取当前文本（从表格中获取最新值）
-            text_item = self.table.item(row, 6)
+            text_item = self.table.item(row, 7)
             text = text_item.text().strip() if text_item else data['text'].strip()
             
             srt_str_list.append(f'{data["line"]}\n{data["startraw"]} --> {data["endraw"]}\n{text}')
@@ -784,8 +918,12 @@ class SpeakerAssignmentDialog(QDialog):
             if role:
                 app_cfg.line_roles[str(data["line"])] = role
 
+        turns = [row > 0 and self.table.item(row, 3).checkState() == Qt.Checked
+                 for row in range(self.table.rowCount())]
         try:
             Path(self.target_sub).write_text("\n\n".join(srt_str_list), encoding="utf-8")
+            (Path(self.target_sub).parent / 'turns.json').write_text(
+                json.dumps(turns, ensure_ascii=False, indent=2), encoding='utf-8')
         except Exception as e:
             logger.error(f"Save subtitle failed: {e}")
             QMessageBox.critical(self, "Error", f"Save failed: {e}")

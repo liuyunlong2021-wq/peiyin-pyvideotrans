@@ -1,0 +1,13 @@
+Read the complete short-drama episode below and identify the speaker of every subtitle line.
+
+Use dialogue context and the optional audio_speaker label together. Audio labels are hints, not ground truth. Reuse the same neutral SpeakerN ID whenever the same character returns after another character speaks.
+
+Set join_previous to true only when this line and the immediately preceding line are one continuous turn by the same character and should be synthesized from one continuous reference clip. A line after another character must always be false, even when its speaker appeared earlier. The first line must be false.
+
+Return only a JSON array with exactly one object per input line in the same order:
+[{"line":1,"speaker":"Speaker1","join_previous":false}]
+
+Do not translate, rewrite, merge, split, explain, or wrap the JSON in markdown.
+
+Episode:
+{episode_items}

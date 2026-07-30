@@ -7,7 +7,7 @@ import pytest
 from videotrans.configure.config import params
 from videotrans.task.taskcfg import SrtItem
 from videotrans.translator import JIUCAI_DRAMA_INDEX
-from videotrans.translator._jiucai import JiuCaiDrama
+from videotrans.translator._jiucai import JiuCaiDrama, parse_turn_suggestions, suggest_turns
 from videotrans.tts._jiucaiclone import JiuCaiClone, api_base, api_origin
 from videotrans.task._stage_recogn import RecognMixin
 from videotrans.util.help_role import role_menu
@@ -53,6 +53,54 @@ def test_drama_translation_restores_missing_srt_block_separator(monkeypatch):
         lambda *_: "1\n00:00:00,000 --> 00:00:01,000\nHello\n2\n00:00:01,000 --> 00:00:02,000\nBye",
     )
     assert channel._item_task("") == "1\n00:00:00,000 --> 00:00:01,000\nHello\n\n2\n00:00:01,000 --> 00:00:02,000\nBye"
+
+
+def test_turn_suggestions_match_every_subtitle_line():
+    result = parse_turn_suggestions(json.dumps([
+        {"line": 1, "speaker": "speaker1", "join_previous": False},
+        {"line": 2, "speaker": "Speaker2", "join_previous": False},
+        {"line": 3, "speaker": "Speaker2", "join_previous": True},
+    ]), [1, 2, 3])
+
+    assert result == [
+        {"line": 1, "speaker": "Speaker1", "join_previous": False},
+        {"line": 2, "speaker": "Speaker2", "join_previous": False},
+        {"line": 3, "speaker": "Speaker2", "join_previous": True},
+    ]
+
+
+def test_turn_suggestions_reject_invalid_first_join():
+    with pytest.raises(ValueError, match="first subtitle"):
+        parse_turn_suggestions(json.dumps([
+            {"line": 1, "speaker": "Speaker1", "join_previous": True},
+        ]), [1])
+
+
+def test_turn_suggestions_use_fixed_model_and_audio_hints(monkeypatch):
+    monkeypatch.setattr(params, "jiucai_api", "https://example.com/v1")
+    monkeypatch.setattr(params, "jiucai_key", "test-key")
+    captured = {}
+
+    class Completions:
+        def create(self, **kwargs):
+            captured.update(kwargs)
+            return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps([
+                {"line": 1, "speaker": "Speaker1", "join_previous": False},
+                {"line": 2, "speaker": "Speaker1", "join_previous": True},
+            ])))])
+
+    fake_client = SimpleNamespace(chat=SimpleNamespace(completions=Completions()))
+    monkeypatch.setattr('videotrans.translator._jiucai.OpenAI', lambda **_: fake_client)
+
+    result = suggest_turns(
+        [srt(1, "快走"), srt(2, "别回头")],
+        [srt(1, "Go!"), srt(2, "Don't look back.")],
+        ['spk7', 'spk7'],
+    )
+
+    assert captured['model'] == 'gemini-3.6-flash'
+    assert '"audio_speaker": "spk7"' in captured['messages'][1]['content']
+    assert result[1]['join_previous'] is True
 
 
 def test_jiucai_url_normalization():

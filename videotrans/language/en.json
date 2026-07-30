@@ -905,6 +905,21 @@
 		"Remove original hard subtitles":"Remove original hard subtitles",
 		"Detect and remove subtitles from the bottom area before translation":"Detect and remove subtitles from the bottom area before translation",
 		"Removing original hard subtitles":"Removing original hard subtitles...",
-		"Subtitle remover is not installed":"Subtitle remover is not installed"
+		"Subtitle remover is not installed":"Subtitle remover is not installed",
+		"Join previous":"Join previous",
+		"Save translation and grouping, start dubbing":"Save translation & groups, start dubbing",
+		"Subtitle and dubbing turn summary":"{0} subtitles → {1} dubbing turns",
+		"Subtitle and clone turn summary":"{0} subtitles / {1} clone turns",
+		"Translation and speaking turn review":"Translation and speaking turn review",
+		"Character suggestion":"Character suggestion",
+		"Find in English subtitles":"Find English subtitles",
+		"Confirm subtitles and grouping, start dubbing":"Confirm subtitles & groups, start dubbing"
+		,"Step 1 review Chinese transcript":"Step 1: Review Chinese transcript"
+		,"Review recognized Chinese dialogue, then start translation":"Review the recognized Chinese dialogue, then start translation"
+		,"Confirm Chinese and start translation":"Confirm Chinese & start translation"
+		,"Step 2 review English and speaking turns":"Step 2: Review English & speaking turns"
+		,"Optional review dubbed English subtitles":"Optional: Review dubbed English subtitles"
+		,"This is a final recognition check after dubbing, not the translation grouping step":"This is the final recognition check after dubbing, not the translation grouping step"
+		,"Confirm dubbed subtitles and continue":"Confirm dubbed subtitles & continue"
 
 }

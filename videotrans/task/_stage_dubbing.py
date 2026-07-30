@@ -12,9 +12,9 @@ from videotrans.util.help_misc import get_md5
 from videotrans.util.help_srt import get_subtitle_from_srt, delete_punc
 
 
-def _merge_clone_turns(queue_tts):
+def _merge_clone_turns(queue_tts, joins=None):
     merged = []
-    for item in queue_tts:
+    for index, item in enumerate(queue_tts):
         current = copy.deepcopy(item)
         current['_subtitle_items'] = [{
             'line': current['line'], 'text': current['text'],
@@ -22,9 +22,12 @@ def _merge_clone_turns(queue_tts):
         }]
         previous = merged[-1] if merged else None
         gap = current['start_time_source'] - previous['end_time_source'] if previous else 0
-        if previous and current.get('_speaker') and current.get('_speaker') == previous.get('_speaker') \
-                and str(current['role']).strip().lower() == str(previous['role']).strip().lower() == 'clone' \
-                and 0 <= gap <= 1000:
+        same_turn = joins[index] if joins is not None else (
+            current.get('_speaker') and current.get('_speaker') == previous.get('_speaker')
+            and 0 <= gap <= 1000
+        ) if previous else False
+        if previous and same_turn \
+                and str(current['role']).strip().lower() == str(previous['role']).strip().lower() == 'clone':
             previous['text'] += ' ' + current['text']
             previous['ref_text'] = f"{previous['ref_text']} {current['ref_text']}".strip()
             previous['end_time'] = current['end_time']
@@ -39,7 +42,7 @@ def _merge_clone_turns(queue_tts):
             continue
         first, last = item['_subtitle_items'][0]['line'], item['_subtitle_items'][-1]['line']
         folder = Path(item['filename']).parent
-        key = get_md5(f"{item['text']}-{item['ref_text']}-{item['_speaker']}")
+        key = get_md5(f"{item['text']}-{item['ref_text']}-{item.get('_speaker', '')}")
         item['filename'] = (folder / f'dubb-turn-{first}-{last}-{key}.wav').as_posix()
         item['ref_wav'] = (folder / f'clone-turn-{first}-{last}.wav').as_posix()
     return merged
@@ -94,13 +97,27 @@ class DubbingMixin:
         line_roles = app_cfg.line_roles
         voice_role = self.cfg.voice_role
         speakers = []
+        turns = None
         speaker_file = Path(self.cfg.cache_folder) / 'speaker.json'
         if self.cfg.tts_type == QWEN3LOCAL_TTS and speaker_file.is_file():
             try:
                 speakers = json.loads(speaker_file.read_text(encoding='utf-8'))
             except (OSError, json.JSONDecodeError):
                 logger.warning(f'无法读取说话人数据，保持逐句配音: {speaker_file}')
+        turns_file = Path(self.cfg.target_dir) / 'turns.json'
+        if self.cfg.tts_type == QWEN3LOCAL_TTS and turns_file.is_file():
+            try:
+                saved_turns = json.loads(turns_file.read_text(encoding='utf-8'))
+                if isinstance(saved_turns, list) and len(saved_turns) == len(subs) \
+                        and all(isinstance(value, bool) for value in saved_turns):
+                    turns = saved_turns
+                else:
+                    logger.warning(f'发言轮次数据与字幕不匹配，改用自动分组: {turns_file}')
+            except (OSError, json.JSONDecodeError):
+                logger.warning(f'无法读取发言轮次数据，改用自动分组: {turns_file}')
         logger.debug(f'{line_roles=}')
+        queue_joins = []
+        previous_sub_index = -2
         for i, it in enumerate(subs):
             if it['end_time'] < it['start_time'] or not it['text'].strip():
                 continue
@@ -133,9 +150,11 @@ class DubbingMixin:
                 tmp_dict['ref_wav'] = f"{self.cfg.cache_folder}/clone-{i}.wav"
                 tmp_dict['ref_language'] = self.cfg.detect_language[:2]
             queue_tts.append(tmp_dict)
+            queue_joins.append(bool(turns[i]) and previous_sub_index == i - 1 if turns is not None else False)
+            previous_sub_index = i
 
-        if speakers and self.cfg.tts_type == QWEN3LOCAL_TTS:
-            queue_tts = _merge_clone_turns(queue_tts)
+        if self.cfg.tts_type == QWEN3LOCAL_TTS and (turns is not None or speakers):
+            queue_tts = _merge_clone_turns(queue_tts, queue_joins if turns is not None else None)
         self.queue_tts = copy.deepcopy(queue_tts)
 
         if not self.queue_tts or len(self.queue_tts) < 1:

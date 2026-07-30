@@ -267,7 +267,9 @@ class WinActionTaskMixin:
             return
         if d['type'] == 'edit_subtitle_target':
             from videotrans.component.onlyone_set_role import SpeakerAssignmentDialog
-            cache_folder, target_language, tts_type = d['text'].split('<|>')
+            payload = d['text'].split('<|>')
+            cache_folder, target_language, tts_type = payload[:3]
+            voice_role = payload[3] if len(payload) > 3 else self.main.voice_role.currentText()
             dialog = SpeakerAssignmentDialog(
                 source_sub=None if not app_cfg.onlyone_trans else app_cfg.onlyone_source_sub,
                 target_sub=app_cfg.onlyone_target_sub,
@@ -277,6 +279,7 @@ class WinActionTaskMixin:
                 all_voices=self.main.current_rolelist,
                 cache_folder=cache_folder,
                 tts_type=int(tts_type),
+                voice_role=voice_role,
                 parent=self.main
             )
             if dialog.exec():

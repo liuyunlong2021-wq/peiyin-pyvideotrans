@@ -32,7 +32,7 @@ class EditRecognResultDialog(QDialog):
         self.novoice_mp4 = novoice_mp4
         self.srt_list_dict = []
 
-        self.setWindowTitle(tr("zimubianjitishi"))
+        self.setWindowTitle(tr("Step 1 review Chinese transcript"))
         self.setWindowIcon(QIcon(f"{ROOT_DIR}/videotrans/styles/icon.ico"))
         self.setMinimumWidth(1200)
         self.setMinimumHeight(700)
@@ -50,6 +50,10 @@ class EditRecognResultDialog(QDialog):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(4, 4, 4, 4)
 
+        stage_label = QLabel(tr("Step 1 review Chinese transcript"))
+        stage_label.setStyleSheet("font-size:16px;font-weight:600;color:#64c879")
+        main_layout.addWidget(stage_label)
+
         # Top Bar
         hstop = QHBoxLayout()
         self.prompt_label = QLabel(tr("jimiaohoufanyi"))
@@ -62,7 +66,7 @@ class EditRecognResultDialog(QDialog):
         hstop.addWidget(self.stop_button)
         main_layout.addLayout(hstop)
 
-        prompt_label2 = QLabel(tr("If you need to delete a line of subtitles, just clear the text in that line"))
+        prompt_label2 = QLabel(tr("Review recognized Chinese dialogue, then start translation"))
         prompt_label2.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(prompt_label2)
 
@@ -135,7 +139,7 @@ class EditRecognResultDialog(QDialog):
         bottom_layout.addWidget(self.table, 1)
 
         # Bottom Bar
-        self.save_button = QPushButton(tr("nextstep"))
+        self.save_button = QPushButton(tr("Confirm Chinese and start translation"))
         self.save_button.clicked.connect(self.save_and_close)
         self.save_button.setCursor(Qt.PointingHandCursor)
         self.save_button.setMinimumSize(QSize(300, 35))

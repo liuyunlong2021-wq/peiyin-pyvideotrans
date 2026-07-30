@@ -15,6 +15,10 @@ from videotrans.task.trans_create import TransCreate
 from videotrans.util.tools import vail_file
 
 
+def _target_dialog_payload(cfg):
+    return f'{cfg.cache_folder}<|>{cfg.target_language_code}<|>{cfg.tts_type}<|>{cfg.voice_role}'
+
+
 class Worker(QThread):
     uito = Signal(str, SignMsg)
 
@@ -67,10 +71,7 @@ class Worker(QThread):
 
             if trk.should_trans:
                 app_cfg.onlyone_trans = True
-                if vail_file(trk.cfg.target_sub):
-                    self._post(text="已存在翻译文件，跳过")
-                else:
-                    trk.trans()
+                trk.trans()
 
             if self._exit(): return
 
@@ -81,7 +82,10 @@ class Worker(QThread):
                 if float(settings.get('countdown_sec', 0)) > 0:
                     app_cfg.set_countdown(86400)
                     # 传递过去临时目录，用于获取 speaker.json，等待修改待配音的字幕
-                    self._post(text=f'{trk.cfg.cache_folder}<|>{trk.cfg.target_language_code}<|>{trk.cfg.tts_type}', type="edit_subtitle_target")
+                    self._post(
+                        text=_target_dialog_payload(trk.cfg),
+                        type="edit_subtitle_target"
+                    )
                     self._post(tr('The subtitle editing interface is rendering'))
                     while app_cfg.task_countdown > 0:
                         if self._exit(): return
