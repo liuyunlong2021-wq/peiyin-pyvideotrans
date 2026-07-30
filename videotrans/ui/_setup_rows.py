@@ -35,6 +35,10 @@ def _create_file_row(ui, parent):
     layout.addWidget(ui.btn_get_video)
     layout.addWidget(ui.select_file_type)
     layout.addWidget(ui.clear_cache)
+    ui.remove_subtitles = QtWidgets.QCheckBox(parent)
+    ui.remove_subtitles.setText(tr("Remove original hard subtitles"))
+    ui.remove_subtitles.setToolTip(tr("Detect and remove subtitles from the bottom area before translation"))
+    layout.addWidget(ui.remove_subtitles)
     layout.addWidget(ui.source_mp4)
 
     ui.btn_save_dir = QtWidgets.QPushButton()

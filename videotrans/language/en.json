@@ -901,6 +901,10 @@
 		"Preparing data":"Preparing data...",
 		"Concatenating final audio":"Concatenating final audio...",
 		"Concat videos":"Concat all videos...",
-		"You can select again whether to enable voice acceleration video slow":"You can select again whether to enable [voice acceleration/video slow], which will take effect in the next alignment phase"
+		"You can select again whether to enable voice acceleration video slow":"You can select again whether to enable [voice acceleration/video slow], which will take effect in the next alignment phase",
+		"Remove original hard subtitles":"Remove original hard subtitles",
+		"Detect and remove subtitles from the bottom area before translation":"Detect and remove subtitles from the bottom area before translation",
+		"Removing original hard subtitles":"Removing original hard subtitles...",
+		"Subtitle remover is not installed":"Subtitle remover is not installed"
 
 }

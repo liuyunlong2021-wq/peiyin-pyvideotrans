@@ -126,6 +126,7 @@ class WinActionCheckMixin:
         self.cfg['target_language_code'] = translator.get_code(show_text=self.cfg['target_language'])
 
         self.cfg['clear_cache'] = self.main.clear_cache.isChecked()
+        self.cfg['remove_subtitles'] = self.main.remove_subtitles.isChecked()
         self.cfg['only_out_mp4'] = self.main.only_out_mp4.isChecked()
         self.cfg['fix_punc'] = self.main.fix_punc.currentIndex()
 

@@ -27,6 +27,8 @@ class SubtitleMixin:
         maxlen = int(
             settings.get('cjk_len', 15) if self.cfg.target_language_code[:2] in contants.CJK_LANG else
             settings.get('other_len', 60))
+        if self.cfg.target_language_code[:2] not in contants.CJK_LANG and self.video_info.get('height', 0) > self.video_info.get('width', 0):
+            maxlen = min(maxlen, 32)
         target_sub_list = get_subtitle_from_srt(self.cfg.target_sub)
 
         srt_string = ""
@@ -67,7 +69,11 @@ class SubtitleMixin:
         if self.cfg.subtitle_type in [2, 4]:
             return os.path.basename(process_end_subtitle), subtitle_langcode
 
-        process_end_subtitle_ass = set_ass_font(process_end_subtitle)
+        process_end_subtitle_ass = set_ass_font(
+            process_end_subtitle,
+            self.video_info.get('width', 0),
+            self.video_info.get('height', 0)
+        )
         basename = os.path.basename(process_end_subtitle_ass)
         return basename, subtitle_langcode
 

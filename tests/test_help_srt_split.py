@@ -144,6 +144,10 @@ class TestDeletePunc:
         assert "Hello" in result
         assert "world" in result
 
+    def test_preserves_english_contractions(self):
+        from videotrans.util.help_srt import delete_punc
+        assert delete_punc("Don't worry! I'll go.") == "Don't worry I'll go"
+
 
 class TestSrtStrToListdict:
     def test_valid_srt(self):

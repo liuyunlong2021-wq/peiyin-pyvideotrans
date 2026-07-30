@@ -9,13 +9,17 @@ import threading
 from pathlib import Path
 
 from videotrans import translator
-from videotrans.configure.config import tr, app_cfg, settings, logger
+from videotrans.configure.config import tr, app_cfg, settings, logger, ROOT_DIR
 from videotrans.configure.excepts import VideoTransError, FFmpegError
 from videotrans.util.help_ffmpeg import get_video_codec, get_audio_time, runffmpeg, get_video_duration
 from videotrans.util.help_misc import vail_file, read_last_n_lines, is_novoice_mp4
 
 
 class AssembleMixin:
+
+    def _subtitle_filter(self, subtitles_file):
+        fonts_dir = (Path(ROOT_DIR) / 'videotrans/styles/fonts').as_posix()
+        return f"subtitles=filename='{subtitles_file}':fontsdir='{fonts_dir}'"
 
     def assembling(self) -> None:
         _st=time.time()
@@ -257,7 +261,7 @@ class AssembleMixin:
 
             else:
                 cmd1.append('-filter_complex')
-                subtitle_filter = [f"[0:v]subtitles=filename='{subtitles_file}'[v_out]"]
+                subtitle_filter = [f"[0:v]{self._subtitle_filter(subtitles_file)}[v_out]"]
                 cmd2 = [
                     "-map",
                     "[v_out]",
@@ -363,7 +367,8 @@ class AssembleMixin:
         _crf = f'{settings.get("crf", 23)}'
 
         global_args = []
-        vf_string = f"[0:v]subtitles=filename='{subtitles_file}'[v_out]"
+        subtitle_filter = self._subtitle_filter(subtitles_file)
+        vf_string = f"[0:v]{subtitle_filter}[v_out]"
 
         _preset = settings.get('preset', 'medium')
         if 'fast' in _preset:
@@ -388,9 +393,9 @@ class AssembleMixin:
             enc_args = ['-cq', _crf, '-preset', PRESET_MAP.get('nvenc').get(_preset, 'p4')]
             if settings.get('hw_decode'):
                 global_args = ['-hwaccel', 'cuda', '-hwaccel_output_format', 'cuda']
-                vf_string = f"[0:v]hwdownload,format=nv12,subtitles=filename='{subtitles_file}',hwupload_cuda[v_out]"
+                vf_string = f"[0:v]hwdownload,format=nv12,{subtitle_filter},hwupload_cuda[v_out]"
             else:
-                vf_string = f"[0:v]subtitles=filename='{subtitles_file}'[v_out]"
+                vf_string = f"[0:v]{subtitle_filter}[v_out]"
 
             return global_args, vf_string, vcodec, enc_args
         if hw_type in ['videotoolbox']:
@@ -405,7 +410,7 @@ class AssembleMixin:
                 device = devices[0] if devices else '/dev/dri/renderD128'
                 if settings.get('hw_decode'):
                     global_args = ['-hwaccel', 'vaapi', '-hwaccel_device', device, '-hwaccel_output_format', 'vaapi']
-                    vf_string = f"[0:v]hwdownload,format=nv12,subtitles=filename='{subtitles_file}',format=nv12,hwupload[v_out]"
+                    vf_string = f"[0:v]hwdownload,format=nv12,{subtitle_filter},format=nv12,hwupload[v_out]"
                 else:
                     global_args = [
                         '-init_hw_device', f'vaapi=vaapi:{device}'

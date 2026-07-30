@@ -1,4 +1,5 @@
 import copy
+import json
 import re
 import shutil
 import time
@@ -6,9 +7,42 @@ from pathlib import Path
 
 from videotrans.configure.config import tr, app_cfg, settings, logger
 from videotrans.configure.excepts import DubbingSrtError
-from videotrans.tts import run as run_tts, SUPPORT_CLONE
+from videotrans.tts import run as run_tts, SUPPORT_CLONE, QWEN3LOCAL_TTS
 from videotrans.util.help_misc import get_md5
 from videotrans.util.help_srt import get_subtitle_from_srt, delete_punc
+
+
+def _merge_clone_turns(queue_tts):
+    merged = []
+    for item in queue_tts:
+        current = copy.deepcopy(item)
+        current['_subtitle_items'] = [{
+            'line': current['line'], 'text': current['text'],
+            'start_time': current['start_time'], 'end_time': current['end_time']
+        }]
+        previous = merged[-1] if merged else None
+        gap = current['start_time_source'] - previous['end_time_source'] if previous else 0
+        if previous and current.get('_speaker') and current.get('_speaker') == previous.get('_speaker') \
+                and str(current['role']).strip().lower() == str(previous['role']).strip().lower() == 'clone' \
+                and 0 <= gap <= 1000:
+            previous['text'] += ' ' + current['text']
+            previous['ref_text'] = f"{previous['ref_text']} {current['ref_text']}".strip()
+            previous['end_time'] = current['end_time']
+            previous['endraw'] = current['endraw']
+            previous['end_time_source'] = current['end_time_source']
+            previous['_subtitle_items'].extend(current['_subtitle_items'])
+            continue
+        merged.append(current)
+
+    for item in merged:
+        if len(item['_subtitle_items']) < 2:
+            continue
+        first, last = item['_subtitle_items'][0]['line'], item['_subtitle_items'][-1]['line']
+        folder = Path(item['filename']).parent
+        key = get_md5(f"{item['text']}-{item['ref_text']}-{item['_speaker']}")
+        item['filename'] = (folder / f'dubb-turn-{first}-{last}-{key}.wav').as_posix()
+        item['ref_wav'] = (folder / f'clone-turn-{first}-{last}.wav').as_posix()
+    return merged
 
 
 class DubbingMixin:
@@ -59,6 +93,13 @@ class DubbingMixin:
 
         line_roles = app_cfg.line_roles
         voice_role = self.cfg.voice_role
+        speakers = []
+        speaker_file = Path(self.cfg.cache_folder) / 'speaker.json'
+        if self.cfg.tts_type == QWEN3LOCAL_TTS and speaker_file.is_file():
+            try:
+                speakers = json.loads(speaker_file.read_text(encoding='utf-8'))
+            except (OSError, json.JSONDecodeError):
+                logger.warning(f'无法读取说话人数据，保持逐句配音: {speaker_file}')
         logger.debug(f'{line_roles=}')
         for i, it in enumerate(subs):
             if it['end_time'] < it['start_time'] or not it['text'].strip():
@@ -86,11 +127,15 @@ class DubbingMixin:
                 "tts_type": self.cfg.tts_type,
                 "filename": f"{self.cfg.cache_folder}/dubb-{i}-{_key}.wav"
             }
+            if i < len(speakers):
+                tmp_dict['_speaker'] = speakers[i]
             if str(voice).strip().lower() == 'clone' and self.cfg.tts_type in SUPPORT_CLONE:
                 tmp_dict['ref_wav'] = f"{self.cfg.cache_folder}/clone-{i}.wav"
                 tmp_dict['ref_language'] = self.cfg.detect_language[:2]
             queue_tts.append(tmp_dict)
 
+        if speakers and self.cfg.tts_type == QWEN3LOCAL_TTS:
+            queue_tts = _merge_clone_turns(queue_tts)
         self.queue_tts = copy.deepcopy(queue_tts)
 
         if not self.queue_tts or len(self.queue_tts) < 1:

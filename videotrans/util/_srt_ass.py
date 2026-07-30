@@ -6,7 +6,7 @@ from videotrans.configure.config import ROOT_DIR, logger
 from videotrans.util._srt_parse import get_subtitle_from_srt
 
 
-def set_ass_font(srtfile: str) -> str:
+def set_ass_font(srtfile: str, width: int = 0, height: int = 0) -> str:
     from . import help_ffmpeg
     """
     Convert SRT to ASS with custom styles:
@@ -30,17 +30,26 @@ def set_ass_font(srtfile: str) -> str:
     ass_file_path = f'{srtfile[:-3]}ass'
     help_ffmpeg.runffmpeg(['-y', '-i', edit_srt, ass_file_path])
 
+    style = {
+        'Name': 'Default', 'Fontname': 'DFPHeiW9-GB', 'Fontsize': 92,
+        'PrimaryColour': '&H00FFFFFF&', 'SecondaryColour': '&H00FFFFFF&',
+        'OutlineColour': '&H00101215&', 'BackColour': '&H00101215&',
+        'Bold': 0, 'Italic': 0, 'Underline': 0, 'StrikeOut': 0,
+        'ScaleX': 100, 'ScaleY': 100, 'Spacing': 0, 'Angle': 0,
+        'BorderStyle': 1, 'Outline': 4, 'Shadow': 2, 'Alignment': 2,
+        'MarginL': 10, 'MarginR': 10, 'MarginV': int(height * .25) if height else 480, 'Encoding': 1,
+        'Bottom_Fontsize': 92, 'Bottom_PrimaryColour': '&H00FFFFFF&',
+        'Bottom_Bold': 0, 'Bottom_Italic': 0,
+        'Bottom_SecondaryColour': '&H00FFFFFF&',
+        'Bottom_OutlineColour': '&H00101215&', 'Bottom_BackColour': '&H00101215&'
+    }
     JSON_FILE = f'{ROOT_DIR}/videotrans/ass.json'
-    if not os.path.exists(JSON_FILE):
-        logger.debug(f"[set_ass_font] 未修改硬字幕样式，跳过样式替换")
-        return ass_file_path
-
-    try:
-        with open(JSON_FILE, 'r', encoding='utf-8-sig') as f:
-            style = json.load(f)
-    except Exception as e:
-        logger.exception(f"[set_ass_font] 错误：无法读取或解析 JSON 文件 {JSON_FILE}: {e}", exc_info=True)
-        return ass_file_path
+    if os.path.exists(JSON_FILE):
+        try:
+            with open(JSON_FILE, 'r', encoding='utf-8-sig') as f:
+                style.update(json.load(f))
+        except Exception as e:
+            logger.exception(f"[set_ass_font] 错误：无法读取或解析 JSON 文件 {JSON_FILE}: {e}", exc_info=True)
 
     default_style = (
         f"Style: {style.get('Name', 'Default')},"
@@ -108,6 +117,10 @@ def set_ass_font(srtfile: str) -> str:
     except Exception as e:
         logger.exception(f"[set_ass_font] 错误：无法读取 ASS 文件: {e}", exc_info=True)
         return ass_file_path
+
+    if width and height:
+        content = re.sub(r'PlayResX:\s*\d+', f'PlayResX: {width}', content)
+        content = re.sub(r'PlayResY:\s*\d+', f'PlayResY: {height}', content)
 
     pattern = r'(^\[V4\+ Styles\]\s*\r?\n' \
               r'Format:[^\r\n]*\r?\n' \

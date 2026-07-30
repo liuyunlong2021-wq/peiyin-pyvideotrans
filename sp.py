@@ -26,7 +26,7 @@ import os
 import atexit, sys, time
 from PySide6.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QMessageBox
 from PySide6.QtCore import Qt, qInstallMessageHandler, QTimer
-from PySide6.QtGui import QPixmap, QGuiApplication, QIcon
+from PySide6.QtGui import QPixmap, QGuiApplication, QIcon, QFontDatabase
 import argparse
 import tempfile
 from pathlib import Path
@@ -190,6 +190,8 @@ if __name__ == "__main__":
         pass
 
     app = QApplication(sys.argv)
+    for font_file in Path('videotrans/styles/fonts').glob('*.[ot]tf'):
+        QFontDatabase.addApplicationFont(font_file.as_posix())
     res = 0
     if getattr(sys, 'frozen', False) and (Path(sys.executable).parent.as_posix()).startswith(
             Path(tempfile.gettempdir()).as_posix()):

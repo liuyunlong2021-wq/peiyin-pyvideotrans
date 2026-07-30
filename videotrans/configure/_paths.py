@@ -75,3 +75,6 @@ def _set_env():
         os.environ['PATH'] = f'{ROOT_DIR}/_internal/torch/lib;' + os.environ.get("PATH", "")
     os.environ['PATH'] = ROOT_DIR + os.pathsep + f'{ROOT_DIR}/ffmpeg' + os.pathsep + f'{ROOT_DIR}/ffmpeg/sox' + os.pathsep + os.environ.get(
         "PATH", "")
+    ffmpeg_full = Path('/opt/homebrew/opt/ffmpeg-full/bin')
+    if sys.platform == 'darwin' and ffmpeg_full.is_dir():
+        os.environ['PATH'] = ffmpeg_full.as_posix() + os.pathsep + os.environ['PATH']

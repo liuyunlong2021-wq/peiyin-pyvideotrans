@@ -48,12 +48,23 @@ class AlignMixin:
         # 变速后更新字幕
         if self.cfg.voice_autorate or self.cfg.video_autorate or self.cfg.align_sub_audio:
             srt = ""
-            for (idx, it) in enumerate(self.queue_tts):
-                startraw = ms_to_time_string(ms=it['start_time'])
-                endraw = ms_to_time_string(ms=it['end_time'])
-                if self.cfg.fix_punc==2:
-                    it['text']=delete_punc(it['text'])
-                srt += f"{idx + 1}\n{startraw} --> {endraw}\n{it['text'].strip('...')}\n\n"
+            rows = []
+            for it in self.queue_tts:
+                children = it.get('_subtitle_items')
+                if not children:
+                    rows.append((it['start_time'], it['end_time'], it['text']))
+                    continue
+                source_start, source_end = children[0]['start_time'], children[-1]['end_time']
+                source_span = max(1, source_end - source_start)
+                target_span = max(1, it['end_time'] - it['start_time'])
+                for child in children:
+                    start = it['start_time'] + round((child['start_time'] - source_start) * target_span / source_span)
+                    end = it['start_time'] + round((child['end_time'] - source_start) * target_span / source_span)
+                    rows.append((start, max(start + 1, end), child['text']))
+            for idx, (start, end, text) in enumerate(rows):
+                if self.cfg.fix_punc == 2:
+                    text = delete_punc(text)
+                srt += f"{idx + 1}\n{ms_to_time_string(ms=start)} --> {ms_to_time_string(ms=end)}\n{text.strip('...')}\n\n"
             with  Path(self.cfg.target_sub).open('w', encoding="utf-8") as f:
                 f.write(srt.strip())
 

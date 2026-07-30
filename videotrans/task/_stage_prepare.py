@@ -1,7 +1,7 @@
-import time,re,json,shutil
+import time,re,json,shutil,subprocess,os
 from pathlib import Path
 
-from videotrans.configure.config import tr, app_cfg, settings, logger
+from videotrans.configure.config import tr, app_cfg, settings, logger, ROOT_DIR
 from videotrans.configure.excepts import VideoTransError
 from videotrans.task.simple_runnable_qt import run_in_threadpool
 from videotrans.util.help_ffmpeg import get_video_info, runffmpeg
@@ -9,6 +9,45 @@ from videotrans.util.help_misc import vail_file
 from videotrans.util.help_srt import get_srt_from_list,get_subtitle_from_srt
 
 class PrepareMixin:
+
+    def _remove_original_subtitles(self):
+        if not self.cfg.remove_subtitles:
+            return
+        output = Path(self.cfg.target_dir) / 'removed-original-subtitles.mp4'
+        if vail_file(output):
+            self.cfg.name = output.as_posix()
+            return
+
+        tool = Path(ROOT_DIR) / 'tools/video-subtitle-remover'
+        main = tool / 'backend/main.py'
+        python = next((p for p in (tool / '.venv/bin/python', tool / 'venv/bin/python') if p.is_file()), None)
+        if not main.is_file() or not python:
+            raise VideoTransError(
+                f"{tr('Subtitle remover is not installed')}: {tool}\n"
+                "https://github.com/liuyunlong2021-wq/qushuiyin-video-subtitle-remover"
+            )
+
+        info = get_video_info(self.cfg.name)
+        width, height = int(info['width']), int(info['height'])
+        self.signal(text=tr('Removing original hard subtitles'))
+        launcher = (
+            "import runpy,sys; from backend.tools import common_tools; "
+            "common_tools.merge_big_file_if_not_exists=lambda *a,**k:None; "
+            "runpy.run_path(sys.argv.pop(1),run_name='__main__')"
+        )
+        cmd = [
+            python.as_posix(), '-c', launcher, main.as_posix(), '-i', str(self.cfg.name), '-o', output.as_posix(),
+            '-c', str(height // 2), str(height), '0', str(width),
+            '--inpaint-mode', 'sttn-det'
+        ]
+        try:
+            env = dict(os.environ, PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK='True')
+            subprocess.run(cmd, cwd=tool, env=env, check=True, text=True, capture_output=True)
+        except subprocess.CalledProcessError as e:
+            raise VideoTransError((e.stderr or e.stdout or str(e))[-3000:]) from e
+        if not vail_file(output):
+            raise VideoTransError(f"{tr('Subtitle remover is not installed')}: {output}")
+        self.cfg.name = output.as_posix()
 
     def prepare(self) -> None:
         _st=time.time()
@@ -18,6 +57,7 @@ class PrepareMixin:
         Path(self.cfg.target_dir).mkdir(parents=True, exist_ok=True)
 
         self._unlink_size0([self.cfg.source_sub, self.cfg.target_sub, self.cfg.targetdir_mp4])
+        self._remove_original_subtitles()
         self.video_info = get_video_info(self.cfg.name)
         self.video_time = self.video_info['time']
         audio_stream_len = self.video_info.get('streams_audio', 0)

@@ -1,0 +1,3 @@
+[submodule "tools/video-subtitle-remover"]
+	path = tools/video-subtitle-remover
+	url = https://github.com/liuyunlong2021-wq/qushuiyin-video-subtitle-remover.git
