@@ -40,6 +40,10 @@
 - **💻 Command Line Interface (CLI)**: Supports headless operation, convenient for server deployment or batch processing.
 - **🌐 Web Interface (WebUI)**: Browser-based interface for remote access or internal network deployment.
 
+### Drama Translation & Voice Cloning Workflow
+
+The desktop GUI also supports context-aware short-drama translation and local voice cloning: proofread the source subtitles, review the English lines and the “join previous” speaking turns, then let local Qwen3-TTS clone each complete turn. Subtitles remain line-by-line so individual translations can be corrected and `A → B → A` turns can be split manually. Translation and speaker suggestions use the configured Jiucaihezi API with the fixed `gemini-3.6-flash` model; API keys stay in the local configuration.
+
 
 ---
 
@@ -107,6 +111,8 @@ uv sync
 ```bash
 uv run sp.py
 ```
+
+After launch, configure the Jiucaihezi API URL/key in Settings. Local Qwen3-TTS is also required for the cloning workflow. See the [drama translation and voice cloning SDD](docs/wiki/开发/韭菜盒子剧情翻译与逐句声音克隆SDD.md) for the review rules and UI layout.
 
 **CLI**:
 ```bash
@@ -213,5 +219,4 @@ This project mainly relies on the following open-source projects (partial):
 ---
 
 *Created by [jianchang512](https://github.com/jianchang512)*
-
 
