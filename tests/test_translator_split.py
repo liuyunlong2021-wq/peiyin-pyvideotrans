@@ -58,17 +58,17 @@ class TestTranslatorSplitImports:
     def test_id_name_dict_importable(self):
         from videotrans.translator import _ID_NAME_DICT
         assert isinstance(_ID_NAME_DICT, dict)
-        assert len(_ID_NAME_DICT) == 24
+        assert len(_ID_NAME_DICT) == 26
 
     def test_translaste_name_list_importable(self):
         from videotrans.translator import TRANSLASTE_NAME_LIST
         assert isinstance(TRANSLASTE_NAME_LIST, list)
-        assert len(TRANSLASTE_NAME_LIST) == 24
+        assert len(TRANSLASTE_NAME_LIST) == 26
 
     def test_ai_trans_channels_importable(self):
         from videotrans.translator import AI_TRANS_CHANNELS
         assert isinstance(AI_TRANS_CHANNELS, list)
-        assert len(AI_TRANS_CHANNELS) == 14
+        assert len(AI_TRANS_CHANNELS) == 16
 
     def test_base_trans_importable(self):
         from videotrans.translator import BaseTrans
@@ -78,101 +78,21 @@ class TestTranslatorSplitImports:
 class TestTranslatorIndexConstants:
     """Verify all index constants exist and have correct values."""
 
-    def test_google_index(self):
-        from videotrans.translator import GOOGLE_INDEX
-        assert GOOGLE_INDEX == 0
+    def test_current_channel_indices(self):
+        import videotrans.translator as translator
 
-    def test_microsoft_index(self):
-        from videotrans.translator import MICROSOFT_INDEX
-        assert MICROSOFT_INDEX == 1
+        expected = {
+            'GOOGLE_INDEX': 0, 'MICROSOFT_INDEX': 1, 'M2M100_INDEX': 2, 'HYMT2_INDEX': 3,
+            'CHATGPT_INDEX': 4, 'DEEPSEEK_INDEX': 5, 'GEMINI_INDEX': 6, 'ZHIPUAI_INDEX': 7,
+            'AZUREGPT_INDEX': 8, 'LOCALLLM_INDEX': 9, 'OPENROUTER_INDEX': 10,
+            'SILICONFLOW_INDEX': 11, 'AI302_INDEX': 12, 'QWENMT_INDEX': 13,
+            'ZIJIE_INDEX': 14, 'TENCENT_INDEX': 15, 'BAIDU_INDEX': 16, 'DEEPL_INDEX': 17,
+            'DEEPLX_INDEX': 18, 'ALI_INDEX': 19, 'LIBRE_INDEX': 20, 'MINIMAX_INDEX': 21,
+            'XIAOMI_INDEX': 22, 'CAMB_INDEX': 23, 'TRANSAPI_INDEX': 24,
+            'JIUCAI_DRAMA_INDEX': 25,
+        }
 
-    def test_m2m100_index(self):
-        from videotrans.translator import M2M100_INDEX
-        assert M2M100_INDEX == 2
-
-    def test_chatgpt_index(self):
-        from videotrans.translator import CHATGPT_INDEX
-        assert CHATGPT_INDEX == 3
-
-    def test_deepseek_index(self):
-        from videotrans.translator import DEEPSEEK_INDEX
-        assert DEEPSEEK_INDEX == 4
-
-    def test_gemini_index(self):
-        from videotrans.translator import GEMINI_INDEX
-        assert GEMINI_INDEX == 5
-
-    def test_zhipuai_index(self):
-        from videotrans.translator import ZHIPUAI_INDEX
-        assert ZHIPUAI_INDEX == 6
-
-    def test_azuregpt_index(self):
-        from videotrans.translator import AZUREGPT_INDEX
-        assert AZUREGPT_INDEX == 7
-
-    def test_locallm_index(self):
-        from videotrans.translator import LOCALLLM_INDEX
-        assert LOCALLLM_INDEX == 8
-
-    def test_openrouter_index(self):
-        from videotrans.translator import OPENROUTER_INDEX
-        assert OPENROUTER_INDEX == 9
-
-    def test_siliconflow_index(self):
-        from videotrans.translator import SILICONFLOW_INDEX
-        assert SILICONFLOW_INDEX == 10
-
-    def test_ai302_index(self):
-        from videotrans.translator import AI302_INDEX
-        assert AI302_INDEX == 11
-
-    def test_qwenmt_index(self):
-        from videotrans.translator import QWENMT_INDEX
-        assert QWENMT_INDEX == 12
-
-    def test_zijie_index(self):
-        from videotrans.translator import ZIJIE_INDEX
-        assert ZIJIE_INDEX == 13
-
-    def test_tencent_index(self):
-        from videotrans.translator import TENCENT_INDEX
-        assert TENCENT_INDEX == 14
-
-    def test_baidu_index(self):
-        from videotrans.translator import BAIDU_INDEX
-        assert BAIDU_INDEX == 15
-
-    def test_deepl_index(self):
-        from videotrans.translator import DEEPL_INDEX
-        assert DEEPL_INDEX == 16
-
-    def test_deeplx_index(self):
-        from videotrans.translator import DEEPLX_INDEX
-        assert DEEPLX_INDEX == 17
-
-    def test_ali_index(self):
-        from videotrans.translator import ALI_INDEX
-        assert ALI_INDEX == 18
-
-    def test_libre_index(self):
-        from videotrans.translator import LIBRE_INDEX
-        assert LIBRE_INDEX == 19
-
-    def test_minimax_index(self):
-        from videotrans.translator import MINIMAX_INDEX
-        assert MINIMAX_INDEX == 20
-
-    def test_xiaomi_index(self):
-        from videotrans.translator import XIAOMI_INDEX
-        assert XIAOMI_INDEX == 21
-
-    def test_camb_index(self):
-        from videotrans.translator import CAMB_INDEX
-        assert CAMB_INDEX == 22
-
-    def test_transapi_index(self):
-        from videotrans.translator import TRANSAPI_INDEX
-        assert TRANSAPI_INDEX == 23
+        assert {name: getattr(translator, name) for name in expected} == expected
 
 
 class TestTranslatorGetCode:

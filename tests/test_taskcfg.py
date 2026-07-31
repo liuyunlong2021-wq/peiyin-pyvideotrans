@@ -224,8 +224,8 @@ class TestTaskCfgSTT:
         assert cfg.remove_noise is False
         assert cfg.enable_diariz is False
         assert cfg.nums_diariz == 0
-        assert cfg.fix_punc is False
-        assert cfg.rephrase == 2
+        assert cfg.fix_punc == 0
+        assert cfg.rephrase == 0
 
     def test_stt_specific_fields(self):
         cfg = TaskCfgSTT(

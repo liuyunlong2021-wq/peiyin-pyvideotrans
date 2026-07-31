@@ -65,7 +65,7 @@ class TestActionsClassHierarchy:
 
 class TestActionsMethods:
     EXPECTED_WINACTION_METHODS = {
-        '_reset', 'set_djs_timeout', 'delete_process', 'import_sub_fun',
+        '_reset', 'set_djs_timeout', 'delete_process',
         'set_translate_type', 'set_subtitle_type', 'shound_translate', 'check_tts',
         'check_reccogn', 'check_output', 'check_name_length', 'check_start',
         'show_xxl_select', 'show_cpp_select', 'recogn_type_change', 'model_type_change',
