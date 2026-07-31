@@ -914,6 +914,13 @@
 		"Character suggestion":"Character suggestion",
 		"Find in English subtitles":"Find English subtitles",
 		"Confirm subtitles and grouping, start dubbing":"Confirm subtitles & groups, start dubbing"
+		,"Voice library":"Voice library"
+		,"Not selected":"Not selected"
+		,"Select voice library folder":"Select voice library folder"
+		,"Add approved long references to library":"Add approved long references to library"
+		,"Speaker mismatch":"Speaker mismatch"
+		,"Joined lines must use the same character ID":"Joined lines must use the same character ID."
+		,"Joined lines must use the same character and emotion":"Joined lines must use the same character and emotion."
 		,"Step 1 review Chinese transcript":"Step 1: Review Chinese transcript"
 		,"Review recognized Chinese dialogue, then start translation":"Review the recognized Chinese dialogue, then start translation"
 		,"Confirm Chinese and start translation":"Confirm Chinese & start translation"

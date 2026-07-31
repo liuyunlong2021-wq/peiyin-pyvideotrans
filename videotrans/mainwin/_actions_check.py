@@ -9,11 +9,21 @@ from videotrans.util.help_misc import show_error
 
 class WinActionCheckMixin:
 
+    def get_translate_type(self):
+        data = self.main.translate_type.currentData()
+        return data[0] if data else self.main.translate_type.currentIndex()
+
     def set_translate_type(self, idx):
+        data = self.main.translate_type.itemData(idx)
+        if data:
+            params["translate_type"] = data[0]
+            if data[1]:
+                params["jiucai_model"] = data[1]
+            params.save()
         try:
             t = self.main.target_language.currentText()
             if t not in ['-']:
-                rs = translator.is_allow_translate(translate_type=idx, show_target=t)
+                rs = translator.is_allow_translate(translate_type=self.get_translate_type(), show_target=t)
                 if rs is not True:
                     return False
         except Exception as e:
@@ -105,6 +115,16 @@ class WinActionCheckMixin:
 
     def check_start(self):
         from videotrans import recognition, translator
+        paused_review = getattr(self, 'paused_review', None)
+        if paused_review:
+            paused_review.paused = False
+            if paused_review.exec():
+                self.paused_review = None
+                self.main.startbtn.setText(tr("starting..."))
+                self.set_djs_timeout()
+            else:
+                self.main.startbtn.setText("继续校对")
+            return
         if app_cfg.current_status == 'ing':
             self.update_status('stop')
             return
@@ -119,7 +139,7 @@ class WinActionCheckMixin:
             self.main.startbtn.setDisabled(False)
             return
 
-        self.cfg['translate_type'] = self.main.translate_type.currentIndex()
+        self.cfg['translate_type'] = self.get_translate_type()
         self.cfg['source_language'] = self.main.source_language.currentText()
         self.cfg['target_language'] = self.main.target_language.currentText()
         self.cfg['source_language_code'] = translator.get_code(show_text=self.cfg['source_language'])

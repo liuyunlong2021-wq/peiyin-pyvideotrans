@@ -62,10 +62,13 @@ class MainWindow(BindSignalsMixin, WinformMixin, LifecycleMixin, QMainWindow, Ui
         self.callback('import tts ...')
         from videotrans import tts
         self.callback('import translate ...')
-        from videotrans.translator import TRANSLASTE_NAME_LIST,LANGNAME_DICT,get_code
+        from videotrans.translator import GOOGLE_INDEX, MICROSOFT_INDEX, JIUCAI_DRAMA_INDEX, LANGNAME_DICT, get_code
         self.callback('Get cache  ...')
         self.languagename = list(LANGNAME_DICT.values())
-        self.translate_type.addItems(TRANSLASTE_NAME_LIST)
+        self.translate_type.addItem("Google（免费）", (GOOGLE_INDEX, ""))
+        self.translate_type.addItem("微软（免费）", (MICROSOFT_INDEX, ""))
+        for model in ("gemini-3.6-flash", "claude-fable-5", "claude-opus-5", "gpt-5.6-sol", "deepseek-v4-pro"):
+            self.translate_type.addItem(model, (JIUCAI_DRAMA_INDEX, model))
         self.source_language.addItems(self.languagename)
         self.target_language.addItems(["-"] + self.languagename)
 
@@ -91,7 +94,11 @@ class MainWindow(BindSignalsMixin, WinformMixin, LifecycleMixin, QMainWindow, Ui
         _role = params.get('voice_role') or 'No'
         _model_name = params.get('model_name')
 
-        self.translate_type.setCurrentIndex(_translate_type)
+        selected_model = params.get('jiucai_model', 'gemini-3.6-flash')
+        selected_index = next((i for i in range(self.translate_type.count())
+                               if self.translate_type.itemData(i) == (_translate_type, selected_model)
+                               or self.translate_type.itemData(i) == (_translate_type, '')), 2)
+        self.translate_type.setCurrentIndex(selected_index)
         self.tts_type.setCurrentIndex(_tts_type)
         self.recogn_type.setCurrentIndex(_recogn_type)
         self.voice_role.clear()

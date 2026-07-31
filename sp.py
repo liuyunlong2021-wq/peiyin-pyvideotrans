@@ -190,8 +190,10 @@ if __name__ == "__main__":
         pass
 
     app = QApplication(sys.argv)
-    for font_file in Path('videotrans/styles/fonts').glob('*.[ot]tf'):
-        QFontDatabase.addApplicationFont(font_file.as_posix())
+    fonts_dir = Path(__file__).resolve().parent / 'videotrans/styles/fonts'
+    for font_file in fonts_dir.iterdir():
+        if font_file.suffix.lower() in {'.ttf', '.otf'}:
+            QFontDatabase.addApplicationFont(font_file.as_posix())
     res = 0
     if getattr(sys, 'frozen', False) and (Path(sys.executable).parent.as_posix()).startswith(
             Path(tempfile.gettempdir()).as_posix()):

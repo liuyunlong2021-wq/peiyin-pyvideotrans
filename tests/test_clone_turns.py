@@ -3,6 +3,7 @@ from types import SimpleNamespace
 
 from videotrans.task._stage_dubbing import _merge_clone_turns
 from videotrans.task.only_one import _target_dialog_payload
+from videotrans.component.onlyone_set_role import joined_line_conflict
 
 
 def _item(line, speaker, start, end, text):
@@ -57,6 +58,16 @@ def test_target_dialog_uses_voice_role_frozen_in_task():
     assert _target_dialog_payload(cfg) == '/tmp/task-1<|>en<|>1<|>clone'
 
 
+def test_joined_line_conflict_reports_exact_row_and_reason():
+    turns = [False, True, True]
+    assignments = ['Speaker1', 'Speaker1', 'Speaker1']
+    emotions = ['neutral', 'neutral', 'angry']
+
+    assert joined_line_conflict(turns, assignments, emotions) == (2, 'emotion')
+    assignments[2] = 'Speaker2'
+    assert joined_line_conflict(turns, assignments, emotions) == (2, 'character')
+
+
 def test_clone_review_uses_model_suggestions_and_hides_role_controls(tmp_path):
     from PySide6.QtCore import Qt
     from PySide6.QtWidgets import QApplication, QWidget
@@ -92,7 +103,8 @@ def test_clone_review_uses_model_suggestions_and_hides_role_controls(tmp_path):
 
     assert dialog.splitter.orientation() == Qt.Horizontal
     assert dialog.table.isColumnHidden(0)
-    assert dialog.table.isColumnHidden(4)
+    assert not dialog.table.isColumnHidden(4)
+    assert dialog.table.horizontalHeaderItem(4).text() in {'Emotion', '情绪'}
     assert not dialog.bottom_button_container.isVisible()
     assert dialog.timer is None
     assert dialog.display_data[1]['spk'] == 'Speaker1'

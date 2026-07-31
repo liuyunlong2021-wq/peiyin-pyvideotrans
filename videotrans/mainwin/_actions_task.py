@@ -283,7 +283,15 @@ class WinActionTaskMixin:
                 parent=self.main
             )
             if dialog.exec():
+                self.paused_review = None
                 self.set_djs_timeout()
+            elif dialog.paused:
+                self.paused_review = dialog
+                app_cfg.set_countdown(86400)
+                self.main.startbtn.setText("继续校对")
+                self.main.startbtn.setDisabled(False)
+                if uuid in self.processbtns:
+                    self.processbtns[uuid].setPause()
             else:
                 self.update_status('stop')
             return

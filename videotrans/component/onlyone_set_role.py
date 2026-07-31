@@ -11,13 +11,31 @@ from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLineEdit, QLabel, QCheckBox,
     QComboBox, QPushButton, QWidget, QGroupBox, QPlainTextEdit,
     QMessageBox, QTableWidget, QTableWidgetItem,
-    QHeaderView, QAbstractItemView, QGridLayout, QSplitter, QStackedLayout
+    QHeaderView, QAbstractItemView, QGridLayout, QSplitter, QStackedLayout,
+    QFileDialog
 )
 
 from videotrans.configure.config import ROOT_DIR, tr, app_cfg, settings, logger
 from videotrans.configure import config
 from videotrans.tts import QWEN3LOCAL_TTS
 from videotrans.util import tools
+
+EMOTIONS = {
+    'neutral': '中性', 'happy': '开心', 'angry': '愤怒', 'sad': '悲伤',
+    'fearful': '害怕', 'surprised': '惊讶', 'disgusted': '厌恶',
+    'other': '其他', 'unknown': '未知',
+}
+
+
+def joined_line_conflict(turns, assignments, emotions):
+    for row in range(1, len(turns)):
+        if not turns[row]:
+            continue
+        if assignments[row] != assignments[row - 1]:
+            return row, 'character'
+        if emotions[row] != emotions[row - 1]:
+            return row, 'emotion'
+    return None
 
 
 
@@ -49,6 +67,16 @@ class SpeakerAssignmentDialog(QDialog):
         self.source_wav = source_wav
         self.novoice_mp4 = novoice_mp4
         self._target_end_ms = -1
+        self.voice_library_dir = ''
+        self.add_library_references = None
+        self.paused = False
+        if self.clone_review_mode:
+            pointer = Path(self.target_sub).parent / 'voice_library.json'
+            try:
+                saved = json.loads(pointer.read_text(encoding='utf-8')) if pointer.is_file() else {}
+                self.voice_library_dir = str(saved.get('path', ''))
+            except (OSError, json.JSONDecodeError):
+                pass
 
         if source_sub:
             sour_pt = Path(source_sub)
@@ -116,6 +144,12 @@ class SpeakerAssignmentDialog(QDialog):
             stage_label.setStyleSheet("font-size:16px;font-weight:600;color:#64c879")
             header_layout.addWidget(stage_label)
             header_layout.addWidget(self.turn_summary)
+            self.library_button = QPushButton()
+            self.library_button.clicked.connect(self.select_voice_library)
+            self._refresh_library_button()
+            header_layout.addWidget(self.library_button)
+            self.add_library_references = QCheckBox(tr("Add approved long references to library"))
+            header_layout.addWidget(self.add_library_references)
             header_layout.addStretch()
             header_layout.addWidget(self.search_input)
             header_layout.addWidget(self.replace_input)
@@ -238,7 +272,7 @@ class SpeakerAssignmentDialog(QDialog):
         self.opendir_button.setMaximumSize(QSize(150, 30))
         self.opendir_button.clicked.connect(self.opendir_sub)
 
-        cancel_button = QPushButton(tr("Terminate this mission"))
+        cancel_button = QPushButton("保存并暂停" if self.clone_review_mode else tr("Terminate this mission"))
         cancel_button.setCursor(Qt.PointingHandCursor)
         cancel_button.setStyleSheet("background-color:transparent;color:#ff0")
         cancel_button.setMinimumSize(QSize(150, 30))
@@ -281,7 +315,7 @@ class SpeakerAssignmentDialog(QDialog):
             self.table.setColumnCount(9)
             self.table.setHorizontalHeaderLabels([
                 "Sel", tr("Line"), tr('Character suggestion') if self.clone_review_mode else tr('Speaker'),
-                tr("Join previous"), tr("Dubbing role"), tr("Time Axis"), "\u23F5",
+                tr("Join previous"), tr("Emotion") if self.clone_review_mode else tr("Dubbing role"), tr("Time Axis"), "\u23F5",
                 tr("Subtitle Text"), tr("SourceLang Text")
             ])
             
@@ -321,9 +355,9 @@ class SpeakerAssignmentDialog(QDialog):
             self.table.setColumnWidth(8, 300)
             if self.clone_review_mode:
                 self.table.setColumnHidden(0, True)
-                self.table.setColumnHidden(4, True)
                 self.table.setColumnWidth(2, 90)
                 self.table.setColumnWidth(3, 70)
+                self.table.setColumnWidth(4, 90)
                 self.table.setColumnWidth(5, 125)
                 header.setSectionResizeMode(8, QHeaderView.Stretch)
             
@@ -380,6 +414,25 @@ class SpeakerAssignmentDialog(QDialog):
             except (OSError, json.JSONDecodeError):
                 pass
             turn_suggestions = None
+            saved_assignments = None
+            assignments_path = Path(self.target_sub).parent / 'speaker_assignments.json'
+            try:
+                candidate = json.loads(assignments_path.read_text(encoding='utf-8')) \
+                    if assignments_path.is_file() else None
+                if isinstance(candidate, list) and len(candidate) == len(self.srt_list_dict):
+                    saved_assignments = [str(value).strip() for value in candidate]
+            except (OSError, json.JSONDecodeError):
+                pass
+            saved_emotions = None
+            for filename in ('emotion_overrides.json', 'emotion_suggestions.json'):
+                try:
+                    path = Path(self.target_sub).parent / filename
+                    candidate = json.loads(path.read_text(encoding='utf-8')) if path.is_file() else None
+                    if isinstance(candidate, list) and len(candidate) == len(self.srt_list_dict):
+                        saved_emotions = [str(value).strip().lower() for value in candidate]
+                        break
+                except (OSError, json.JSONDecodeError):
+                    pass
             suggestion_path = Path(self.cache_folder) / 'turn_suggestions.json'
             try:
                 if suggestion_path.is_file():
@@ -392,7 +445,9 @@ class SpeakerAssignmentDialog(QDialog):
                 pass
             for i, item in enumerate(self.srt_list_dict):
                 # Speaker ID
-                if self.clone_review_mode and turn_suggestions:
+                if saved_assignments is not None:
+                    spk = saved_assignments[i]
+                elif self.clone_review_mode and turn_suggestions:
                     spk = turn_suggestions[i]['speaker']
                 elif i < len(self.speaker_list_sub):
                     raw_speaker = self.speaker_list_sub[i]
@@ -431,6 +486,7 @@ class SpeakerAssignmentDialog(QDialog):
                     'end_time': item['end_time'],
                     'checked': False,
                     'role': '',
+                    'emotion': saved_emotions[i] if saved_emotions else 'neutral',
                     'join_previous': bool(join_previous) if i else False
                 })
             
@@ -467,6 +523,10 @@ class SpeakerAssignmentDialog(QDialog):
 
     def _batch_fill_table(self, start_row, end_row):
         """批量填充表格数据 - 减少重绘"""
+        library_characters = []
+        if self.clone_review_mode and self.voice_library_dir:
+            from videotrans.util.voice_library import character_ids
+            library_characters = character_ids(self.voice_library_dir)
         for row in range(start_row, end_row):
             data = self.display_data[row]
             
@@ -481,10 +541,18 @@ class SpeakerAssignmentDialog(QDialog):
             id_item.setFlags(Qt.ItemIsEnabled)
             self.table.setItem(row, 1, id_item)
             
-            # 第2列：Speaker（只读）
-            spk_item = QTableWidgetItem(data['spk'])
-            spk_item.setFlags(Qt.ItemIsEnabled)
-            self.table.setItem(row, 2, spk_item)
+            # 第2列：人物建议；克隆模式允许人工改为稳定角色 ID
+            if self.clone_review_mode:
+                speaker_combo = QComboBox()
+                speaker_combo.setEditable(True)
+                speaker_combo.addItems(list(dict.fromkeys([data['spk'], *library_characters])))
+                speaker_combo.setCurrentText(data['spk'])
+                speaker_combo.currentTextChanged.connect(lambda _text: self.stop_countdown())
+                self.table.setCellWidget(row, 2, speaker_combo)
+            else:
+                spk_item = QTableWidgetItem(data['spk'])
+                spk_item.setFlags(Qt.ItemIsEnabled)
+                self.table.setItem(row, 2, spk_item)
 
             # 第3列：接上句
             join_item = QTableWidgetItem()
@@ -492,11 +560,19 @@ class SpeakerAssignmentDialog(QDialog):
             join_item.setCheckState(Qt.Checked if data['join_previous'] else Qt.Unchecked)
             self.table.setItem(row, 3, join_item)
 
-            # 第4列：Role（只读，显示用）
-            role_item = QTableWidgetItem(tr('Default Role'))
-            role_item.setFlags(Qt.ItemIsEnabled)
-            role_item.setForeground(QColor("#ff4d4d"))
-            self.table.setItem(row, 4, role_item)
+            if self.clone_review_mode:
+                emotion_combo = QComboBox()
+                for value, label in EMOTIONS.items():
+                    emotion_combo.addItem(label, value)
+                emotion_combo.setCurrentIndex(max(0, emotion_combo.findData(
+                    data['emotion'] if data['emotion'] in EMOTIONS else 'other')))
+                emotion_combo.currentTextChanged.connect(lambda _text: self.stop_countdown())
+                self.table.setCellWidget(row, 4, emotion_combo)
+            else:
+                role_item = QTableWidgetItem(tr('Default Role'))
+                role_item.setFlags(Qt.ItemIsEnabled)
+                role_item.setForeground(QColor("#ff4d4d"))
+                self.table.setItem(row, 4, role_item)
             
             # 第5列：Time（只读）
             time_item = QTableWidgetItem(data['time_str'])
@@ -860,7 +936,13 @@ class SpeakerAssignmentDialog(QDialog):
     def cancel_and_close(self):
         if hasattr(self, 'timer') and self.timer:
             self.timer.stop()
-        self._release_media()
+        if self.clone_review_mode:
+            if not self._save_review(validate=False):
+                return
+            self.paused = True
+            self._stop_playback()
+        else:
+            self._release_media()
         self.reject()
 
     def keyPressEvent(self, event):
@@ -892,23 +974,61 @@ class SpeakerAssignmentDialog(QDialog):
     def opendir_sub(self):
         QDesktopServices.openUrl(QUrl.fromLocalFile(Path(self.target_sub).parent.as_posix()))
 
+    def _refresh_library_button(self):
+        if hasattr(self, 'library_button'):
+            name = Path(self.voice_library_dir).name if self.voice_library_dir else tr("Not selected")
+            self.library_button.setText(f'{tr("Voice library")}: {name}')
+
+    def select_voice_library(self):
+        folder = QFileDialog.getExistingDirectory(
+            self, tr("Select voice library folder"),
+            self.voice_library_dir or Path(self.target_sub).parent.as_posix())
+        if folder:
+            self.voice_library_dir = folder
+            self._refresh_library_button()
+            if hasattr(self, 'table'):
+                from videotrans.util.voice_library import character_ids
+                for row in range(self.table.rowCount()):
+                    combo = self.table.cellWidget(row, 2)
+                    if combo:
+                        current = combo.currentText()
+                        combo.addItems([value for value in character_ids(folder)
+                                        if combo.findText(value) < 0])
+                        combo.setCurrentText(current)
+            self.stop_countdown()
+
 
     def closeEvent(self, event):
         event.ignore()  # 忽略关闭请求，窗口保持不动
     
     def save_and_close(self):
-        self._release_media()
         self.save_button.setDisabled(True)
+        if not self._save_review(validate=True):
+            self.save_button.setDisabled(False)
+            return
+        self._release_media()
+        self.accept()
+
+    def _save_review(self, validate=True):
         app_cfg.line_roles = {}
         srt_str_list = []
 
         speaker_keys = list(self.speakers.keys()) if self.speakers else []
+        assignments = []
+        emotions = []
         for row, data in enumerate(self.display_data):
             # 获取当前文本（从表格中获取最新值）
             text_item = self.table.item(row, 7)
             text = text_item.text().strip() if text_item else data['text'].strip()
             
             srt_str_list.append(f'{data["line"]}\n{data["startraw"]} --> {data["endraw"]}\n{text}')
+            speaker_combo = self.table.cellWidget(row, 2)
+            speaker_item = self.table.item(row, 2)
+            assignments.append(
+                speaker_combo.currentText().strip() if speaker_combo else
+                speaker_item.text().strip() if speaker_item else data['spk'])
+            emotion_combo = self.table.cellWidget(row, 4)
+            emotions.append(emotion_combo.currentData() if emotion_combo else data.get('emotion', 'neutral'))
 
             # 角色保存逻辑
             role = data.get('role', '')
@@ -920,14 +1040,43 @@ class SpeakerAssignmentDialog(QDialog):
 
         turns = [row > 0 and self.table.item(row, 3).checkState() == Qt.Checked
                  for row in range(self.table.rowCount())]
+        conflict = joined_line_conflict(turns, assignments, emotions) if validate else None
+        if conflict:
+            row, kind = conflict
+            current_line = self.display_data[row]['line']
+            previous_line = self.display_data[row - 1]['line']
+            if kind == 'character':
+                detail = f'人物不同（{assignments[row - 1]} ≠ {assignments[row]}）'
+                fix = f'请取消第{current_line}行“接上句”，或将两行人物改为一致。'
+            else:
+                before = EMOTIONS.get(emotions[row - 1], emotions[row - 1])
+                current = EMOTIONS.get(emotions[row], emotions[row])
+                detail = f'情绪不同（{before} ≠ {current}）'
+                fix = f'请取消第{current_line}行“接上句”，或将两行情绪改为一致。'
+            self.table.selectRow(row)
+            self.table.scrollToItem(self.table.item(row, 1), QAbstractItemView.PositionAtCenter)
+            QMessageBox.warning(
+                self, tr("Speaker mismatch"),
+                f'第{current_line}行不能接上第{previous_line}行：{detail}。\n{fix}')
+            return False
         try:
             Path(self.target_sub).write_text("\n\n".join(srt_str_list), encoding="utf-8")
             (Path(self.target_sub).parent / 'turns.json').write_text(
                 json.dumps(turns, ensure_ascii=False, indent=2), encoding='utf-8')
+            (Path(self.target_sub).parent / 'speaker_assignments.json').write_text(
+                json.dumps(assignments, ensure_ascii=False, indent=2), encoding='utf-8')
+            (Path(self.target_sub).parent / 'emotion_overrides.json').write_text(
+                json.dumps(emotions, ensure_ascii=False, indent=2), encoding='utf-8')
+            if self.voice_library_dir:
+                (Path(self.target_sub).parent / 'voice_library.json').write_text(
+                    json.dumps({
+                        'path': self.voice_library_dir,
+                        'add_current': bool(self.add_library_references and
+                                            self.add_library_references.isChecked())
+                    }, ensure_ascii=False, indent=2), encoding='utf-8')
         except Exception as e:
             logger.error(f"Save subtitle failed: {e}")
             QMessageBox.critical(self, "Error", f"Save failed: {e}")
             self.save_button.setDisabled(False)
-            return
-
-        self.accept()
+            return False
+        return True

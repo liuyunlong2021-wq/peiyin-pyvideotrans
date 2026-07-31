@@ -120,7 +120,7 @@ class WinActionConfigMixin:
             if is_allow_lang is not True:
                 self.main.show_tips.setText(is_allow_lang)
             
-            if translator.is_allow_translate(translate_type=self.main.translate_type.currentIndex(),
+            if translator.is_allow_translate(translate_type=self.get_translate_type(),
                                              show_target=t) is not True:
                 return
         if self.main.tts_type.currentIndex() not in tts.CHANGE_BY_LANGUAGE:

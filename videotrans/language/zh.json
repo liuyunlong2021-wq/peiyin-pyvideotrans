@@ -916,6 +916,13 @@
 		"Character suggestion":"人物建议",
 		"Find in English subtitles":"查找英文字幕",
 		"Confirm subtitles and grouping, start dubbing":"确认字幕与分组，开始配音"
+		,"Voice library":"角色库"
+		,"Not selected":"未选择"
+		,"Select voice library folder":"选择剧集角色库目录"
+		,"Add approved long references to library":"将本集已确认的长参考音加入角色库"
+		,"Speaker mismatch":"人物不一致"
+		,"Joined lines must use the same character ID":"接上句的两行必须是同一个人物，请先修改人物 ID 或取消接上句。"
+		,"Joined lines must use the same character and emotion":"接上句的连续台词必须是同一个人物、同一种情绪，请先修正或取消接上句。"
 		,"Step 1 review Chinese transcript":"第 1 步：校对中文字幕"
 		,"Review recognized Chinese dialogue, then start translation":"请核对识别出的中文台词，确认后开始剧情翻译"
 		,"Confirm Chinese and start translation":"确认中文，开始翻译"

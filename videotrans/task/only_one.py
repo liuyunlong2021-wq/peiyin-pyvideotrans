@@ -80,6 +80,10 @@ class Worker(QThread):
 
                 self._post(text=Path(trk.cfg.target_sub).read_text(encoding='utf-8'), type='replace_subtitle')
                 if float(settings.get('countdown_sec', 0)) > 0:
+                    try:
+                        trk.prepare_clone_review()
+                    except Exception as error:
+                        logger.warning(f'情绪预分析失败，继续人工校对: {type(error).__name__}: {error}')
                     app_cfg.set_countdown(86400)
                     # 传递过去临时目录，用于获取 speaker.json，等待修改待配音的字幕
                     self._post(

@@ -24,6 +24,7 @@ def srt(line, text):
 def test_drama_translation_sends_complete_srt_once(monkeypatch):
     monkeypatch.setattr(params, "jiucai_api", "https://example.com/v1")
     monkeypatch.setattr(params, "jiucai_key", "test-key")
+    monkeypatch.setattr(params, "jiucai_model", "claude-opus-5")
     items = [srt(1, "你是谁？"), srt(2, "我是你哥哥。")]
     channel = JiuCaiDrama(
         translate_type=JIUCAI_DRAMA_INDEX, text_list=items, is_test=True,
@@ -37,7 +38,7 @@ def test_drama_translation_sends_complete_srt_once(monkeypatch):
 
     monkeypatch.setattr(channel, "_item_task", translate)
     result = channel.run()
-    assert channel.model_name == "gemini-3.6-flash"
+    assert channel.model_name == "claude-opus-5"
     assert channel.aisendsrt is True
     assert channel.trans_thread == 2
     assert len(calls) == 1 and "你是谁？" in calls[0] and "我是你哥哥。" in calls[0]
@@ -76,9 +77,10 @@ def test_turn_suggestions_reject_invalid_first_join():
         ]), [1])
 
 
-def test_turn_suggestions_use_fixed_model_and_audio_hints(monkeypatch):
+def test_turn_suggestions_use_selected_model_and_audio_hints(monkeypatch):
     monkeypatch.setattr(params, "jiucai_api", "https://example.com/v1")
     monkeypatch.setattr(params, "jiucai_key", "test-key")
+    monkeypatch.setattr(params, "jiucai_model", "deepseek-v4-pro")
     captured = {}
 
     class Completions:
@@ -98,7 +100,7 @@ def test_turn_suggestions_use_fixed_model_and_audio_hints(monkeypatch):
         ['spk7', 'spk7'],
     )
 
-    assert captured['model'] == 'gemini-3.6-flash'
+    assert captured['model'] == 'deepseek-v4-pro'
     assert '"audio_speaker": "spk7"' in captured['messages'][1]['content']
     assert result[1]['join_previous'] is True
 

@@ -7,16 +7,12 @@ from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QFormLayout,
     QFontComboBox, QSpinBox, QDoubleSpinBox, QCheckBox, QComboBox, QColorDialog, QGridLayout,
     QGroupBox, QWidget, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem,
-    QGraphicsRectItem, QGraphicsPathItem, QScrollArea
+    QGraphicsRectItem, QGraphicsPathItem, QScrollArea, QSizePolicy
 )
 
-from videotrans.configure.config import ROOT_DIR, tr, defaulelang
+from videotrans.configure.config import ROOT_DIR, tr
 
 JSON_FILE = f'{ROOT_DIR}/videotrans/ass.json'
-PREVIEW_IMAGE = f'{ROOT_DIR}/videotrans/styles/preview.png'
-
-
-
 DEFAULT_STYLE = {
     'Name': 'Default',
     'Fontname': 'DFPHeiW9-GB',
@@ -117,14 +113,16 @@ class PreviewWidget(QGraphicsView):
      
             
     def load_background(self):
-        if Path(PREVIEW_IMAGE).exists():
-            pixmap = QPixmap(PREVIEW_IMAGE)
-            self.background_item = QGraphicsPixmapItem(pixmap)
-            self.background_item.setZValue(-10)
-            self.scene.addItem(self.background_item)
-            self.setSceneRect(self.background_item.boundingRect())
-        else:
-            self.setSceneRect(0, 0, 640, 360)  # Default size if no image
+        pixmap = QPixmap(1080, 1920)
+        pixmap.fill(QColor('#455A64'))
+        self.background_item = QGraphicsPixmapItem(pixmap)
+        self.background_item.setZValue(-10)
+        self.scene.addItem(self.background_item)
+        self.setSceneRect(self.background_item.boundingRect())
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.fitInView(self.sceneRect(), Qt.KeepAspectRatio)
 
     def clear_items(self):
         for item in self.items:
@@ -134,7 +132,7 @@ class PreviewWidget(QGraphicsView):
     def update_preview(self, style):
         self.clear_items()
 
-        text =  '你好啊，亲爱的朋友们！' if defaulelang=='zh' else  'Hello, my dear friend. hope your every day beautiful'
+        text = 'Subtitle preview'
 
         font = QFont(style['Fontname'], style['Fontsize'])
         font.setBold(bool(style['Bold']))
@@ -291,8 +289,10 @@ class ASSStyleDialog(QDialog):
         
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)   # 让内容自适应宽度，高度不够时出现滚动条
-        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.scroll_area.setMinimumWidth(560)
+        self.scroll_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
 
 
@@ -462,16 +462,19 @@ class ASSStyleDialog(QDialog):
         self.form_group.setLayout(self.form_layout)
         self.scroll_area.setWidget(self.form_group)
 
-        content_layout.addWidget(self.scroll_area)
+        content_layout.addWidget(self.scroll_area, 3)
         #content_layout.addWidget(self.form_group)
 
         # Preview
         self.preview_group = QGroupBox('')
+        self.preview_group.setMinimumWidth(340)
+        self.preview_group.setMaximumWidth(420)
+        self.preview_group.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         preview_layout = QVBoxLayout()
         self.preview_widget = PreviewWidget()
         preview_layout.addWidget(self.preview_widget)
         self.preview_group.setLayout(preview_layout)
-        content_layout.addWidget(self.preview_group)
+        content_layout.addWidget(self.preview_group, 2)
 
         self.main_layout.addLayout(content_layout)
 

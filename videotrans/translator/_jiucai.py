@@ -54,7 +54,7 @@ def suggest_turns(source_items, target_items, speaker_hints=None):
         api_key=params.get('jiucai_key', ''),
         base_url=params.get('jiucai_api', ''),
     ).chat.completions.create(
-        model='gemini-3.6-flash',
+        model=params.get('jiucai_model', 'gemini-3.6-flash'),
         timeout=300,
         temperature=0,
         max_tokens=max(2048, len(episode_items) * 80),
@@ -79,7 +79,7 @@ class JiuCaiDrama(OpenAICampat):
         self.ainame = "jiucai_drama"
         self.api_key = params.get("jiucai_key", "")
         self.api_url = params.get("jiucai_api", "")
-        self.model_name = "gemini-3.6-flash"
+        self.model_name = params.get("jiucai_model", "gemini-3.6-flash")
         self.max_tokens = 16384
         super().__post_init__()
 

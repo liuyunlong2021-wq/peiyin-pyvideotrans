@@ -14,12 +14,9 @@ class Ui_jiucaiform(object):
         self.jiucai_key = QtWidgets.QLineEdit()
         self.jiucai_key.setEchoMode(QtWidgets.QLineEdit.Password)
         self.show_key = QtWidgets.QCheckBox("显示 Key")
-        self.model = QtWidgets.QLineEdit("gemini-3.6-flash")
-        self.model.setReadOnly(True)
         layout.addRow("API URL", self.jiucai_api)
         layout.addRow("API Key", self.jiucai_key)
         layout.addRow("", self.show_key)
-        layout.addRow("剧情翻译模型", self.model)
 
         buttons = QtWidgets.QHBoxLayout()
         self.get_key = QtWidgets.QPushButton("前往获取 Key")

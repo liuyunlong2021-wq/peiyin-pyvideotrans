@@ -111,6 +111,7 @@ class AppParams:
             "chatgpt_model": str(_settings.get('chatgpt_model', '-')).strip().split(',')[0],
             "jiucai_api": "https://api.jiucaihezi.studio/v1",
             "jiucai_key": "",
+            "jiucai_model": "gemini-3.6-flash",
             "azure_api": "",
             "azure_key": "",
             "azure_version": "2025-04-01-preview",
