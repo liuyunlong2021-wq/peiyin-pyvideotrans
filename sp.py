@@ -32,10 +32,11 @@ import tempfile
 from pathlib import Path
 from PySide6.QtCore import QSize, QSettings
 import traceback
-from videotrans import VERSION
+from videotrans import APP_NAME, APP_VERSION, BUNDLE_ID
 import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+APP_ROOT = Path(sys.executable).parent if getattr(sys, 'frozen', False) else Path(__file__).resolve().parent
 
 
 # 抑制警告
@@ -67,14 +68,14 @@ class StartWindow(QWidget):
         self.LoadNotif = None
         self.start_time = time.time()
         self.loader = None
-        self.setWindowTitle('pyVideoTrans')
+        self.setWindowTitle(APP_NAME)
 
         self.resize(560, 350)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)  # 窗口背景透明
 
         self.background_label = QLabel(self)
-        self.pixmap = QPixmap("./videotrans/styles/logo.png")
+        self.pixmap = QPixmap((APP_ROOT / "videotrans/styles/logo.png").as_posix())
         self.background_label.setPixmap(self.pixmap)
         self.background_label.setScaledContents(True)
         self.background_label.setGeometry(self.rect())
@@ -82,7 +83,7 @@ class StartWindow(QWidget):
         # 背景上叠加文字
         v_layout = QVBoxLayout(self)
         v_layout.addStretch(1)
-        self.status_label = QLabel(f"pyVideoTrans {VERSION} Loading...")
+        self.status_label = QLabel(f"{APP_NAME} {APP_VERSION} 正在启动...")
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.status_label.setStyleSheet("font-size:16px; color:white; background-color:transparent;")
 
@@ -142,7 +143,7 @@ def initialize_full_app(start_window, app_instance):
     QApplication.processEvents()
     # 导入qss image 资源
     import videotrans.ui.dark.darkstyle_rc
-    with open('./videotrans/styles/style.qss', 'r', encoding='utf-8') as f:
+    with (APP_ROOT / 'videotrans/styles/style.qss').open('r', encoding='utf-8') as f:
         app_instance.setStyleSheet(f.read())
     start_window.update_lable('Loading main window...')
     QApplication.processEvents()
@@ -189,8 +190,13 @@ if __name__ == "__main__":
     except AttributeError:
         pass
 
+    QApplication.setApplicationName(APP_NAME)
+    QApplication.setApplicationDisplayName(APP_NAME)
+    QApplication.setApplicationVersion(APP_VERSION)
+    QApplication.setOrganizationDomain(BUNDLE_ID)
     app = QApplication(sys.argv)
-    fonts_dir = Path(__file__).resolve().parent / 'videotrans/styles/fonts'
+    app.setWindowIcon(QIcon((APP_ROOT / "videotrans/styles/zhuanqianyinlang-icon.png").as_posix()))
+    fonts_dir = APP_ROOT / 'videotrans/styles/fonts'
     for font_file in fonts_dir.iterdir():
         if font_file.suffix.lower() in {'.ttf', '.otf'}:
             QFontDatabase.addApplicationFont(font_file.as_posix())
@@ -206,7 +212,7 @@ if __name__ == "__main__":
         app.quit()
     else:
         splash = StartWindow()
-        splash.setWindowIcon(QIcon("./videotrans/styles/icon.ico"))
+        splash.setWindowIcon(QIcon((APP_ROOT / "videotrans/styles/zhuanqianyinlang-icon.png").as_posix()))
         splash.center()
         splash.show()
 

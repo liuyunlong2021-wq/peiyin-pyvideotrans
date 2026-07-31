@@ -5,11 +5,11 @@
 
 ---
 
-# pyVideoTrans
+# 赚钱音浪
 
 <div align="center">
 
-**一款强大的开源视频翻译 / 语音转录 / AI配音 / 字幕翻译工具**
+**赚钱音浪 1.0.0 - 本地短剧翻译与声音克隆工作台**
 
 [English](../README.md) | [**文档**](https://pyvideotrans.com) | [**在线问答**](https://bbs.pyvideotrans.com) 
 
@@ -17,7 +17,7 @@
 
 </div>
 
-**pyVideoTrans** 致力于无缝地将视频从一种语言转换为另一种语言，包含语音识别、字幕翻译、多角色配音及音画同步等全套流程。支持本地离线部署与多种主流在线 API。
+**赚钱音浪** 基于 GPL-v3 开源项目 pyVideoTrans 开发，新增整集上下文剧情翻译、人工发言轮次校对、本地 Qwen3-TTS 声音克隆、Wiki 分阶段制作和 macOS 品牌启动，同时保留原项目的 GUI、CLI 与 WebUI 能力。
 
 <img width="1566" height="912" alt="image" src="https://github.com/user-attachments/assets/2d5bd178-3dc0-45ee-bc1c-dbb5f6705cf4" />
 
@@ -44,12 +44,14 @@
 
 桌面 GUI 还支持面向短剧的整集上下文翻译和本地声音克隆：先校对中文字幕，再校对英文与“接上句”发言轮次，最后用本地 Qwen3-TTS 按完整发言段克隆。字幕仍逐句保留，适合人工修正个别翻译或拆分 `A → B → A` 的轮次。翻译和人物建议使用配置的韭菜盒子 API 和同一个可选模型；API Key 保存在本地配置中。
 
+菜单中的“制作项目”提供实验性的 Wiki 分阶段入口：识别、翻译、配音、字幕确认和合成可以按集数保存并从人工确认处继续。项目媒体保存在项目的 `.raw/media/`，人工文本保存在 `wiki/`；阶段会在发布前核对输入快照，输入被修改时放弃临时结果，上游更新后下游状态会自动失效。该入口尚未替代原有完整流程，生产任务仍优先使用原流程。设计和当前验证边界见 [Wiki 驱动的分阶段配音制作 SDD](wiki/开发/Wiki驱动的分阶段配音制作SDD.md)。
+
 
 ---
 
-## 🚀 快速开始 (Windows 用户)
+## 🚀 上游 Windows 安装包
 
-我们为 Windows 10/11 用户提供了预打包的 `.exe` 版本，无需配置 Python 环境。
+上游项目为 Windows 10/11 提供预打包 `.exe`，但它**不包含本仓库的全部定制功能**。使用赚钱音浪请按下方源码部署。
 
 1. **下载**: [点击下载最新预打包版本](https://github.com/jianchang512/pyvideotrans/releases)
 2. **解压**: 将压缩包解压到一个**不包含中文、空格**的路径下 (例如 `D:\pyVideoTrans`)。
@@ -95,20 +97,33 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 ### 3. 克隆与安装
 
 ```bash
-git clone https://github.com/jianchang512/pyvideotrans.git
-cd pyvideotrans
+git clone https://github.com/liuyunlong2021-wq/peiyin-pyvideotrans.git
+cd peiyin-pyvideotrans
 uv sync
 ```
 
 > 默认不安装 `whisper.net` 本地渠道，若需要全部安装请执行 `uv sync --all-extras`
 > - 单独安装 `whisper.net`：`uv sync --extra dotnet`
 
+这就是“赚钱音浪 1.0.0”的本地部署方式：仓库源码 + uv 虚拟环境，不需要安装 Python 全局包，也不需要预编译安装包。
+
 ### 4. 启动软件
 
-**启动 GUI 界面**:
+**macOS 桌面应用**:
+```bash
+open "赚钱音浪.app"
+```
+
+执行 `uv sync` 后，可直接双击仓库根目录的 `赚钱音浪.app`。不要把 `.app` 单独移出仓库，它会读取当前仓库的 `.venv`；启动器同时支持 Apple Silicon 和 Intel Mac。
+
+这个最小应用壳没有 Apple 开发者签名。若 macOS 首次拦截，请右键点击应用，选择“打开”，再确认一次“打开”。
+
+**跨平台 GUI / 备用启动方式**:
 ```bash
 uv run sp.py
 ```
+
+启动后会打开桌面 GUI。macOS/Linux 使用上面的命令；Windows 使用同样的 `uv run sp.py`，或在已激活的虚拟环境中运行 `python sp.py`。
 
 启动后，在设置中填写韭菜盒子 API URL/Key；声音克隆模式还需要本地 Qwen3-TTS 模型。完整设计与校对规则见 [剧情翻译与声音克隆 SDD](wiki/开发/韭菜盒子剧情翻译与逐句声音克隆SDD.md)。
 

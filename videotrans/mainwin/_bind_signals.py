@@ -36,6 +36,8 @@ class BindSignalsMixin:
 
         self.glossary.clicked.connect(lambda: show_glossary_editor(self))
         self.action_biaozhun.triggered.connect(self.win_action.set_biaozhun)
+        self.action_production_project.triggered.connect(lambda: self.open_winform('fn_production_project'))
+        self.action_remove_subtitles.triggered.connect(lambda: self.open_winform('fn_remove_subtitles'))
         self.action_tiquzimu.triggered.connect(self.win_action.set_tiquzimu)
 
         self.actionbaidu_key.triggered.connect(lambda: self.open_winform('baidu'))

@@ -5,11 +5,11 @@
 
 ---
 
-# pyVideoTrans
+# 赚钱音浪
 
 <div align="center">
 
-**A Powerful Open Source Video Translation / Audio Transcription / AI Dubbing / Subtitle Translation Tool**
+**赚钱音浪 1.0.0 - Local Short-Drama Translation and Voice-Cloning Workstation**
 
 [中文](docs/README_CN.md) | [**Documentation**](https://pyvideotrans.com) | [**Online Q&A**](https://bbs.pyvideotrans.com)
 
@@ -17,7 +17,7 @@
 
 </div>
 
-**pyVideoTrans** is dedicated to seamlessly converting videos from one language to another, offering a complete workflow that includes speech recognition, subtitle translation, multi-role dubbing, and audio-video synchronization. It supports both local offline deployment and a wide variety of mainstream online APIs.
+**赚钱音浪** is a GPL-v3 desktop application based on pyVideoTrans. It adds context-aware short-drama translation, manual speaking-turn review, local Qwen3-TTS voice cloning, staged production projects, and branded macOS launching while retaining the upstream GUI, CLI, and WebUI capabilities.
 
 <img width="1566" height="912" alt="image" src="https://github.com/user-attachments/assets/7410b17d-9903-4919-954a-31764e246c15" />
 
@@ -47,9 +47,9 @@ The desktop GUI also supports context-aware short-drama translation and local vo
 
 ---
 
-## 🚀 Quick Start (Windows Users)
+## 🚀 Upstream Windows Package
 
-We provide a pre-packaged `.exe` version for Windows 10/11 users, requiring no Python environment configuration.
+The upstream project provides a pre-packaged `.exe` for Windows 10/11. It does **not** include all custom features from this repository; use source deployment below for 赚钱音浪.
 
 1. **Download**: [Click to download the latest pre-packaged version](https://github.com/jianchang512/pyvideotrans/releases)
 2. **Unzip**: Extract the compressed file to a path without Chinese characters or spaces (e.g., `D:\pyVideoTrans`).
@@ -95,8 +95,8 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 ### 3. Clone and Install
 
 ```bash
-git clone https://github.com/jianchang512/pyvideotrans.git
-cd pyvideotrans
+git clone https://github.com/liuyunlong2021-wq/peiyin-pyvideotrans.git
+cd peiyin-pyvideotrans
 uv sync
 ```
 
@@ -105,12 +105,25 @@ uv sync
 > - To install whisper.net: `uv sync --extra dotnet` 
 > - To install WebUI: `uv sync --extra webui` 
 
+This repository is the local deployment for **赚钱音浪 1.0.0**. Users run it from source with `uv`; no global Python packages or prebuilt installer are required.
+
 ### 4. Launch Software
 
-**GUI**:
+**macOS desktop app**:
+```bash
+open "赚钱音浪.app"
+```
+
+After `uv sync`, double-click `赚钱音浪.app` in the repository root. Keep the app inside the repository because it uses the local `.venv`; the universal launcher supports Apple Silicon and Intel Macs.
+
+The minimal app is not Apple Developer signed. If macOS blocks the first launch, Control-click the app, choose **Open**, then confirm **Open** once.
+
+**Cross-platform GUI / fallback**:
 ```bash
 uv run sp.py
 ```
+
+On macOS/Linux, run the command above from the repository directory. On Windows, the same command works, or run `python sp.py` inside the uv environment.
 
 After launch, configure the Jiucaihezi API URL/key in Settings. Local Qwen3-TTS is also required for the cloning workflow. See the [drama translation and voice cloning SDD](docs/wiki/开发/韭菜盒子剧情翻译与逐句声音克隆SDD.md) for the review rules and UI layout.
 
@@ -219,4 +232,3 @@ This project mainly relies on the following open-source projects (partial):
 ---
 
 *Created by [jianchang512](https://github.com/jianchang512)*
-

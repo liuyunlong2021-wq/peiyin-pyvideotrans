@@ -29,6 +29,8 @@ _module_map = {
 "fn_hunliu":".fn_hunliu",
 "fn_peiyin":".fn_peiyin",
 "fn_peiyinrole":".fn_peiyinrole",
+"fn_production_project":".fn_production_project",
+"fn_remove_subtitles":".fn_remove_subtitles",
 "fn_recogn":".fn_recogn",
 "fn_separate":".fn_separate",
 "fn_subtitlescover":".fn_subtitlescover",

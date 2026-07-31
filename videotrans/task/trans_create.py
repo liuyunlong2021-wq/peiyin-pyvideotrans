@@ -48,6 +48,7 @@ class TransCreate(
     clone_ref: str = ""
     cost_duration:float=0.0
     should_recogn2:bool=False
+    strict_voice_reference: bool = False
 
     def __post_init__(self):
         super().__post_init__()
@@ -127,4 +128,3 @@ class TransCreate(
 
         if app_cfg.exec_mode != 'cli':
             threading.Thread(target=runing, daemon=True).start()
-

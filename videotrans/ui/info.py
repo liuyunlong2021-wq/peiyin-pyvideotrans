@@ -3,7 +3,7 @@ from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import QByteArray, QThread, Signal
 from PySide6.QtGui import Qt, QPixmap
 
-from videotrans import VERSION
+from videotrans import APP_NAME, APP_VERSION
 from videotrans.configure.config import tr, app_cfg, defaulelang
 from videotrans.util.help_misc import open_url
 
@@ -33,29 +33,28 @@ class Ui_infoform(object):
         self.text1.setReadOnly(True)
         self.text1.setMaximumHeight(500)
 
-        version_info=f'当前版本: {VERSION}\n最新版本: {app_cfg.new_version_pvt}'
-        en_version_info=f'Current version: {VERSION}\nLatest version: {app_cfg.new_version_pvt}'
+        version_info=f'{APP_NAME} 版本: {APP_VERSION}\n上游版本: {app_cfg.new_version_pvt}'
+        en_version_info=f'{APP_NAME} version: {APP_VERSION}\nUpstream version: {app_cfg.new_version_pvt}'
 
         self.text1.setPlainText(f"""
 {version_info}
 
-本项目基于兴趣创建，无商业和收费计划，你可以一直免费使用，或者fork后自己修改(开源协议GPL-v3)。
+“{APP_NAME}”基于 pyVideoTrans 开源项目二次整理，采用 GPL-v3 协议发布。
 至于维护问题呢，开源嘛都是用爱发电，闲时就多花些精力在这上面，忙时可能就一段时间顾不上。
 当然了，如果觉得该项目对你有价值，并希望该项目能一直稳定持续维护，也欢迎小额捐助。
 
-Email: jianchang512@gmail.com
-文档站/下载: pyvideotrans.com
+原项目: pyVideoTrans
 GitHub: https://github.com/jianchang512/pyvideotrans
 【软件免费下载使用，不收取任何费用，也未在任何平台销售】
 
 """ if defaulelang == 'zh' else f"""
 {en_version_info}
 
-This project is created based on interest, there is no commercial and no charge plan, you can use it for free or fork it and modify it (open source license GPL-v3). 
+“{APP_NAME}” is a branded distribution based on the open-source pyVideoTrans project (GPL-v3).
 As for the maintenance issue, it is all about giving love to the open source, so idle time will spend more time on this, and sometimes just a period of time. 
 Of course, if you think this project is useful to you and want it to be stable and continue to maintain, you are welcome to donate a small amount.
 
-Email: jianchang512@gmail.com
+Upstream: pyVideoTrans
 Docs/Download: pyvideotrans.com
 GitHub: https://github.com/jianchang512/pyvideotrans
 """
@@ -123,8 +122,7 @@ GitHub: https://github.com/jianchang512/pyvideotrans
         lawbtn.clicked.connect(lambda: open_url('https://pyvideotrans.com/law.html'))
         self.v1.addWidget(lawbtn)
         self.v1.addStretch()
-        infoform.setWindowTitle(
-            tr("Donate to help the software to keep on maintaining"))
+        infoform.setWindowTitle(f"{APP_NAME} {APP_VERSION}")
         QtCore.QMetaObject.connectSlotsByName(infoform)
 
     def showimg(self, name):

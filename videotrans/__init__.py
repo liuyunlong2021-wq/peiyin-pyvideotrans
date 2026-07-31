@@ -6,6 +6,9 @@ from videotrans.configure.config import logger
 
 VERSION = "v4.07"
 VERSION_NUM = 407
+APP_NAME = "赚钱音浪"
+APP_VERSION = "1.0.0"
+BUNDLE_ID = "studio.jiucaihezi.zhuanqianyinlang"
 _loaded_modules = {}
 
 @dataclass

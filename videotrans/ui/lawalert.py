@@ -4,6 +4,7 @@ from PySide6 import QtCore, QtWidgets
 from PySide6.QtGui import Qt, QIcon
 
 from videotrans.configure.config import ROOT_DIR, tr
+from videotrans import APP_NAME, APP_VERSION
 
 
 class Ui_lawalert(QtWidgets.QWidget):
@@ -56,7 +57,7 @@ class Ui_lawalert(QtWidgets.QWidget):
 </head>
 <body>
 
-<h1>pyVideoTrans 软件许可与服务协议</h1>
+<h1>{APP_NAME} 软件许可与服务协议</h1>
 <p>更新日期：2025年10月21日</p>
 
 <p>欢迎使用 pyVideoTrans（以下简称“本软件”）！本软件是一款免费、开源的本地视频翻译和语音转录工具。在安装、复制或以任何方式使用本软件前，请您务必仔细阅读并充分理解本协议中的所有条款。</p>
@@ -105,8 +106,7 @@ class Ui_lawalert(QtWidgets.QWidget):
 </body>
 </html>
 
-"""
-                                )
+""".replace("{APP_NAME}", APP_NAME).replace("pyVideoTrans", APP_NAME))
         # text1的边框合为0
         self.text1.setFrameStyle(QtWidgets.QFrame.NoFrame)
         self.text1.setStyleSheet("""
@@ -136,7 +136,7 @@ class Ui_lawalert(QtWidgets.QWidget):
         btn_h.addWidget(dont)
         self.v1.addLayout(btn_h)
 
-        lawalert.setWindowTitle('pyVideoTrans '+tr('Software License Agreement'))
+        lawalert.setWindowTitle(f'{APP_NAME} {APP_VERSION} '+tr('Software License Agreement'))
 
     def _close(self,res=True):
         if res:
@@ -147,6 +147,4 @@ class Ui_lawalert(QtWidgets.QWidget):
             self.main.close()
             Path(ROOT_DIR+"/.agree.txt").unlink(missing_ok=True)
             self.close()
-
-
 

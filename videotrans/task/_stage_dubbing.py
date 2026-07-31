@@ -290,4 +290,6 @@ class DubbingMixin:
                 })
             self.queue_tts = json.loads(queue_file.read_text(encoding='utf-8'))
         except Exception as error:
+            if self.strict_voice_reference:
+                raise DubbingSrtError(f'角色参考库处理失败，已阻止配音：{error}') from error
             logger.warning(f'角色参考库不可用，继续使用当前原声: {type(error).__name__}: {error}')

@@ -13,6 +13,15 @@ def _remove_unwanted_characters(text: str) -> str:
     return re.sub(allowed_characters, '', text)
 
 
+def sensevoice_metadata(text: str):
+    tags = re.findall(r'<\|([^|]+)\|>', text or '')
+    emotions = {'HAPPY', 'SAD', 'ANGRY', 'NEUTRAL', 'FEARFUL', 'DISGUSTED', 'SURPRISED'}
+    emotion = next((tag.lower() for tag in tags if tag.upper() in emotions), 'neutral')
+    ignored = emotions | {'ZH', 'EN', 'YUE', 'JA', 'KO', 'AUTO', 'WOITN', 'ITN'}
+    events = [tag.lower() for tag in tags if tag.upper() not in ignored]
+    return _remove_unwanted_characters(text), emotion, events
+
+
 def _resegment(texts, language, max_speech_ms, logs_file=None) -> List[SrtItem]:
     """
     仅针对过长的 Whisper 识别结果重新断句，并格式化为 SRT 字幕格式。

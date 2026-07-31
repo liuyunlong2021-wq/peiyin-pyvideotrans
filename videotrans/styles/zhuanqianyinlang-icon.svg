@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Zhuanqian Yinlang app icon</title>
+  <desc id="desc">A golden bell sending sound waves across a chive-green background.</desc>
+
+  <rect width="1024" height="1024" rx="224" fill="#16A34A"/>
+  <circle cx="512" cy="512" r="336" fill="#11883E"/>
+
+  <g fill="none" stroke="#DDFBE8" stroke-linecap="round">
+    <path d="M298 414c-52 55-52 141 0 196" stroke-width="38"/>
+    <path d="M222 348c-88 92-88 236 0 328" stroke-width="34" opacity=".88"/>
+    <path d="M150 286c-121 126-121 326 0 452" stroke-width="30" opacity=".68"/>
+
+    <path d="M726 414c52 55 52 141 0 196" stroke-width="38"/>
+    <path d="M802 348c88 92 88 236 0 328" stroke-width="34" opacity=".88"/>
+    <path d="M874 286c121 126 121 326 0 452" stroke-width="30" opacity=".68"/>
+  </g>
+
+  <g stroke="#075A30" stroke-linejoin="round">
+    <path d="M451 363v-38c0-34 27-61 61-61s61 27 61 61v38" fill="none" stroke="#FFD34D" stroke-width="38" stroke-linecap="round"/>
+    <path d="M512 346c-104 0-188 84-188 188v97c0 34-16 66-43 87l-17 13h496l-17-13a109 109 0 0 1-43-87v-97c0-104-84-188-188-188Z" fill="#FFD34D" stroke-width="30"/>
+    <path d="M292 657h440" fill="none" stroke-width="28" stroke-linecap="round"/>
+    <path d="M338 527h348" fill="none" stroke="#E8A928" stroke-width="24" stroke-linecap="round"/>
+    <path d="M389 731c17 52 65 89 123 89s106-37 123-89" fill="#FFC238" stroke-width="28"/>
+    <circle cx="512" cy="760" r="32" fill="#FFF4B8" stroke-width="22"/>
+  </g>
+
+  <path d="M475 425c-39 14-67 44-82 88" fill="none" stroke="#FFF4B8" stroke-width="25" stroke-linecap="round" opacity=".85"/>
+</svg>

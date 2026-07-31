@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QMainWindow
 from videotrans.configure import config
 config.init_run()
 from videotrans.configure.config import tr, params, settings, app_cfg, logger, ROOT_DIR
-from videotrans import VERSION
+from videotrans import APP_NAME, APP_VERSION
 from videotrans.util.checkgpu import AiLoaderThread
 from videotrans.ui.en import Ui_MainWindow
 from videotrans.task.simple_runnable_qt import run_in_threadpool
@@ -41,7 +41,7 @@ class MainWindow(BindSignalsMixin, WinformMixin, LifecycleMixin, QMainWindow, Ui
         self.app_mode = "biaozhun"
         self.current_rolelist = []
         self.setWindowIcon(QIcon(f"{ROOT_DIR}/videotrans/styles/icon.ico"))
-        self.rawtitle = f"{tr('softname')} {VERSION} {tr('Documents')} pyvideotrans.com"
+        self.rawtitle = f"{APP_NAME} {APP_VERSION}"
         self.setWindowTitle(self.rawtitle)
 
         self.moshi = {

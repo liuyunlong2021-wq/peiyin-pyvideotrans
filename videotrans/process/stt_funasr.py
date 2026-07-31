@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import List, Tuple, Union
 from videotrans.task.taskcfg import SrtItem
 from videotrans.configure.config import logger, ROOT_DIR
-from videotrans.process._stt_utils import _write_log, _remove_unwanted_characters
+from videotrans.process._stt_utils import _write_log, _remove_unwanted_characters, sensevoice_metadata
 
 
 def funasr_mlt(
@@ -82,10 +82,21 @@ def funasr_mlt(
                 disable_pbar=True,
                 hotwords=hotword.split(',') if hotword else []
             )
+        metadata = []
         for i, it in enumerate(res):
-            text = _remove_unwanted_characters(it['text'])
+            if model_name == 'iic/SenseVoiceSmall':
+                text, emotion, events = sensevoice_metadata(it['text'])
+                metadata.append({
+                    'start_time': srts[i]['start_time'], 'end_time': srts[i]['end_time'],
+                    'emotion': emotion, 'events': events,
+                })
+            else:
+                text = _remove_unwanted_characters(it['text'])
             srts[i]['text'] = text
             _write_log(logs_file, json.dumps({"type": "subtitles", "text": f'[{i}] {text}\n'}))
+        if metadata:
+            Path(cache_folder, 'sensevoice_metadata.json').write_text(
+                json.dumps(metadata, ensure_ascii=False, indent=2), encoding='utf-8')
         return srts, None
     except Exception as e:
         msg = traceback.format_exc()

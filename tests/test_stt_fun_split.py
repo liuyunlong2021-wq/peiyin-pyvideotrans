@@ -154,6 +154,15 @@ class TestRemoveUnwantedCharacters:
         assert _remove_unwanted_characters('abc 123 !@#') == 'abc 123 !@#'
         assert _remove_unwanted_characters('中文日文 Korean') == '中文日文 Korean'
 
+    def test_sensevoice_metadata_keeps_emotion_and_events(self):
+        from videotrans.process._stt_utils import sensevoice_metadata
+
+        text, emotion, events = sensevoice_metadata('<|zh|><|ANGRY|><|Speech|><|Cry|>你走开')
+
+        assert text == '你走开'
+        assert emotion == 'angry'
+        assert events == ['speech', 'cry']
+
 
 class TestResegment:
     def test_short_segment_not_split(self):

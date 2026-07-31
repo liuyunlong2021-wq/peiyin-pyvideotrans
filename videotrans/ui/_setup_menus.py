@@ -112,6 +112,8 @@ def _setup_actions_and_menus(ui, MainWindow):
     _make_action(ui, "action_online")
     _make_action(ui, "actiontencent_key")
     _make_action(ui, "action_about")
+    _make_action(ui, "action_production_project")
+    _make_action(ui, "action_remove_subtitles")
 
     ui.action_biaozhun = QtGui.QAction()
     ui.action_biaozhun.setCheckable(True)
@@ -203,6 +205,8 @@ def _setup_actions_and_menus(ui, MainWindow):
     ui.menuBar.addAction(ui.menu_H.menuAction())
 
     ui.toolBar.addAction(ui.action_biaozhun)
+    ui.toolBar.addAction(ui.action_production_project)
+    ui.toolBar.addAction(ui.action_remove_subtitles)
     ui.toolBar.addAction(ui.action_tiquzimu)
     ui.toolBar.addAction(ui.action_yuyinshibie)
     ui.toolBar.addAction(ui.action_fanyi)

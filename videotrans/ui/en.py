@@ -349,6 +349,8 @@ class Ui_MainWindow(object):
         self.menu.setTitle(tr("&Tools"))
         self.menu_H.setTitle(tr("&Help"))
         self.toolBar.setWindowTitle("toolBar")
+        self.action_production_project.setText(tr("Production project"))
+        self.action_remove_subtitles.setText(tr("Remove hard subtitles tool"))
         self.actionbaidu_key.setText(tr("Baidu Key"))
         self.actionali_key.setText(tr("Alibaba Translation"))
         self.actionchatgpt_key.setText(
