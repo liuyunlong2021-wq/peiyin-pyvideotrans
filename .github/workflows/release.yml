@@ -54,9 +54,39 @@ jobs:
           name: ZhuanqianYinlang-macOS
           path: ${{ runner.temp }}/ZhuanqianYinlang-macOS.zip
 
+  macos-intel:
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Intel launcher
+        run: |
+          clang -O2 -arch x86_64 赚钱音浪.app/Contents/MacOS/launch.c -o 赚钱音浪.app/Contents/MacOS/launch
+          file 赚钱音浪.app/Contents/MacOS/launch | grep -q 'x86_64'
+      - name: Verify Intel runtime
+        run: |
+          brew install ffmpeg libsndfile
+          uv sync --locked
+          uv run python -c "import PySide6, torch, onnxruntime; print('Intel runtime: ok')"
+      - name: Build Intel ZIP
+        run: |
+          ROOT="$RUNNER_TEMP/赚钱音浪-macOS-Intel"
+          mkdir -p "$ROOT"
+          git archive HEAD | tar -x -C "$ROOT"
+          cp 赚钱音浪.app/Contents/MacOS/launch "$ROOT/赚钱音浪.app/Contents/MacOS/launch"
+          chmod +x "$ROOT/赚钱音浪.app/Contents/MacOS/launch" "$ROOT/scripts/bootstrap-macos.sh"
+          test -f "$ROOT/pyproject.toml"
+          test -x "$ROOT/赚钱音浪.app/Contents/MacOS/launch"
+          test ! -e "$ROOT/.venv"
+          test ! -e "$ROOT/models"
+          ditto -c -k --sequesterRsrc --keepParent "$ROOT" "$RUNNER_TEMP/ZhuanqianYinlang-macOS-Intel.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ZhuanqianYinlang-macOS-Intel
+          path: ${{ runner.temp }}/ZhuanqianYinlang-macOS-Intel.zip
+
   release:
     if: startsWith(github.ref, 'refs/tags/')
-    needs: [windows, macos]
+    needs: [windows, macos, macos-intel]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4

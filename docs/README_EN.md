@@ -20,7 +20,7 @@ Hard-subtitle removal is not included in this repository. Use the separate [subt
 
 ## Source Installation
 
-The simplest installation is to download `ZhuanqianYinlang-Windows.zip` or `ZhuanqianYinlang-macOS.zip` from [GitHub Releases](https://github.com/liuyunlong2021-wq/peiyin-pyvideotrans/releases/latest), extract it, and open the launcher. The first launch prepares Python and runtime dependencies automatically. Model weights are still downloaded separately from the Qwen3-TTS settings.
+The simplest installation is to download `ZhuanqianYinlang-Windows.zip`, `ZhuanqianYinlang-macOS.zip` for Apple Silicon, or `ZhuanqianYinlang-macOS-Intel.zip` from [GitHub Releases](https://github.com/liuyunlong2021-wq/peiyin-pyvideotrans/releases/latest), extract it, and open the launcher. The first launch prepares Python and runtime dependencies automatically. Model weights are still downloaded separately from the Qwen3-TTS settings.
 
 Install Git, `uv`, FFmpeg, and libsndfile, then run:
 
