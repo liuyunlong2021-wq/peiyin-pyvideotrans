@@ -1,234 +1,56 @@
-﻿> Sponsors: **[Recall.ai](https://www.recall.ai/product/meeting-transcription-api?utm_source=github&utm_medium=sponsorship&utm_campaign=jianchang512-pyvideotrans) - Meeting Transcription API**
->
-> If you’re looking for a transcription API for meetings, consider checking out **[Recall.ai](https://www.recall.ai/product/meeting-transcription-api?utm_source=github&utm_medium=sponsorship&utm_campaign=jianchang512-pyvideotrans)** , an API that works with Zoom, Google Meet, Microsoft Teams, and more
-
-
----
-
 # 赚钱音浪
 
-<div align="center">
+**赚钱音浪 1.0.0** is a desktop workstation for short-drama translation and local voice cloning, built on [pyVideoTrans](https://github.com/jianchang512/pyvideotrans).
 
-**赚钱音浪 1.0.0 - Local Short-Drama Translation and Voice-Cloning Workstation**
+[中文说明](../README.md) | [Development Wiki](wiki/CLAUDE.md)
 
-[中文](../README.md) | [**Documentation**](https://pyvideotrans.com) | [**Online Q&A**](https://bbs.pyvideotrans.com)
+## Main Workflow
 
-[![License](https://img.shields.io/badge/License-GPL_v3-blue.svg)](../LICENSE) [![Python](https://img.shields.io/badge/Python-3.10%2B-green.svg)](https://www.python.org/) [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)]()
-
-</div>
-
-**赚钱音浪** is a GPL-v3 desktop application based on pyVideoTrans. It adds context-aware short-drama translation, manual speaking-turn review, local Qwen3-TTS voice cloning, staged production projects, and branded macOS launching while retaining the upstream GUI, CLI, and WebUI capabilities.
-
-<img width="1566" height="912" alt="image" src="https://github.com/user-attachments/assets/7410b17d-9903-4919-954a-31764e246c15" />
-
----
-
-## ✨ Core Features
-
-> [Technical Architecture and Principles](architecture.md)
-
-- **🎥 Fully Automatic Video Translation**: One-click workflow: Speech Recognition (ASR) → Subtitle Translation → Speech Synthesis (TTS) → Video Synthesis.
-- **🎙️ Audio Transcription / Subtitle Generation**: Batch convert audio/video to SRT subtitles, supporting **Speaker Diarization** to distinguish between different roles.
-- **🗣️ Multi-Role AI Dubbing**: Assign different AI dubbing voices to different speakers.
-- **🧬 Voice Cloning**: Integrates models like **F5-TTS, CosyVoice, GPT-SoVITS** for zero-shot voice cloning.
-- **🧠 Powerful Model Support**:
-  - **ASR**: Faster-Whisper (Local), OpenAI Whisper, Alibaba Qwen, ByteDance Volcano, Azure, Google, etc.
-  - **LLM Translation**: DeepSeek, ChatGPT, Claude, Gemini, MiniMax, Ollama (Local), Alibaba Bailian, etc.
-  - **TTS**: Edge-TTS (Free), OpenAI, Azure, Minimaxi, ChatTTS, ChatterBox, etc.
-- **🖥️ Interactive Editing**: Supports pausing and manual proofreading at each stage (recognition, translation, dubbing) to ensure accuracy.
-- **🛠️ Utility Toolkit**: Includes auxiliary tools such as vocal separation, video/subtitle merging, audio-video alignment, and transcript matching.
-- **💻 Command Line Interface (CLI)**: Supports headless operation, convenient for server deployment or batch processing.
-- **🌐 Web Interface (WebUI)**: Browser-based interface for remote access or internal network deployment.
-
-### Drama Translation & Voice Cloning Workflow
-
-The desktop GUI also supports context-aware short-drama translation and local voice cloning: proofread the source subtitles, review the English lines and the “join previous” speaking turns, then let local Qwen3-TTS clone each complete turn. Subtitles remain line-by-line so individual translations can be corrected and `A → B → A` turns can be split manually. Translation and speaker suggestions use the configured Jiucaihezi API with the fixed `gemini-3.6-flash` model; API keys stay in the local configuration.
-
-
----
-
-## 🚀 Upstream Windows Package
-
-The upstream project provides a pre-packaged `.exe` for Windows 10/11. It does **not** include all custom features from this repository; use source deployment below for 赚钱音浪.
-
-1. **Download**: [Click to download the latest pre-packaged version](https://github.com/jianchang512/pyvideotrans/releases)
-2. **Unzip**: Extract the compressed file to a path without Chinese characters or spaces (e.g., `D:\pyVideoTrans`).
-3. **Run**: Double-click `sp.exe` inside the folder to launch.
-
-> **Note**:
-> * Do not run directly from within the compressed archive.
-> * To use GPU acceleration, ensure **CUDA 12.8** and **cuDNN 9.11** are installed.
-
----
-
-## 🛠️ Source Deployment (macOS / Linux / Windows Developers)
-
-We recommend using **[`uv`](https://docs.astral.sh/uv/)** for package management for faster speed and better environment isolation.
-
-### 1. Prerequisites
-
-* **Python**: Recommended version 3.10
-* **FFmpeg**: Must be installed and configured in the environment variables.
-  * **macOS**:
-  ```
-    brew install libsndfile  git  python@3.10
-
-	brew uninstall --ignore-dependencies ffmpeg
-
-	brew tap homebrew-ffmpeg/ffmpeg
-
-	brew install homebrew-ffmpeg/ffmpeg/ffmpeg
-  ```
-  * **Linux (Ubuntu/Debian)**: `sudo apt-get install ffmpeg libsndfile1-dev`
-  * **Windows**: [Download FFmpeg](https://ffmpeg.org/download.html) and configure Path, or place `ffmpeg.exe` and `ffprobe.exe` directly in the project directory.
-
-### 2. Install uv (If not installed)
-
-```bash
-# macOS/Linux
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Windows (PowerShell)
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```text
+Import video
+  -> recognize and proofread Chinese subtitles with SenseVoice
+  -> translate the full episode with a cloud model
+  -> review characters, emotions, English lines, and speaking turns
+  -> clone English speech with local Qwen3-TTS
+  -> calibrate subtitles and timing
+  -> compose the final video
 ```
 
-### 3. Clone and Install
+Hard-subtitle removal is not included in this repository. Use the separate [subtitle-remover repository](https://github.com/liuyunlong2021-wq/qushuiyin-video-subtitle-remover) when needed, then import the processed video here.
+
+## Source Installation
+
+Install Git, `uv`, FFmpeg, and libsndfile, then run:
 
 ```bash
 git clone https://github.com/liuyunlong2021-wq/peiyin-pyvideotrans.git
 cd peiyin-pyvideotrans
 uv sync
-```
-
-> By default, `whisper.net` and `WebUI` are not installed locally.
-> - To install all optional channels: `uv sync --all-extras`
-> - To install whisper.net: `uv sync --extra dotnet`
-> - To install WebUI: `uv sync --extra webui`
-
-This repository is the local deployment for **赚钱音浪 1.0.0**. Users run it from source with `uv`; no global Python packages or prebuilt installer are required.
-
-### 4. Launch Software
-
-**macOS desktop app**:
-```bash
-open "赚钱音浪.app"
-```
-
-After `uv sync`, double-click `赚钱音浪.app` in the repository root. Keep the app inside the repository because it uses the local `.venv`; the universal launcher supports Apple Silicon and Intel Macs.
-
-The minimal app is not Apple Developer signed. If macOS blocks the first launch, Control-click the app, choose **Open**, then confirm **Open** once.
-
-**Cross-platform GUI / fallback**:
-```bash
 uv run sp.py
 ```
 
-On macOS/Linux, run the command above from the repository directory. On Windows, the same command works, or run `python sp.py` inside the uv environment.
+On macOS, after `uv sync`, you can also open `赚钱音浪.app` from the repository root. The app uses the repository's `.venv`; it does not bundle Python, dependencies, or model weights.
 
-After launch, configure the Jiucaihezi API URL/key in Settings. Existing dubbing channels remain available. Local Qwen3-TTS is optional; users who need local voice cloning can choose a model that suits their hardware. See the [drama translation and voice cloning SDD](wiki/开发/韭菜盒子剧情翻译与逐句声音克隆SDD.md) for the review rules and UI layout.
+Configure the cloud API URL and key locally in Settings. Do not commit API keys or include them in logs and issues.
 
-**CLI**:
-```bash
-# Video Translation
-uv run cli.py --task vtv --name "./video.mp4" --source_language_code zh-cn --target_language_code en --voice_role "en-US-GuyNeural"
+## Local Models
 
-# Audio to Subtitle
-uv run cli.py --task stt --name "./audio.wav" --model_name large-v3
+Qwen3-TTS defaults to `0.6B`; users with more capable hardware may select `1.7B`. Only the selected Base model is downloaded on first use. “Built-in” means the channel is supported by the application code, not that its model weights are part of the GitHub clone.
 
-# Subtitle Translation
-uv run cli.py --task sts --name "./subs.srt" --target_language_code en
+SenseVoice and emotion2vec models are also downloaded when their stages first need them. The tracked repository content is about 19 MB; `.venv/`, `models/`, logs, and task output are ignored by Git.
 
-# Text to Speech
-uv run cli.py --task tts --name "./subs.srt" --voice_role "zh-CN-YunyangNeural"
-```
+## Production Project
 
-> [CLI documentation with all parameters](cli.md)
+The experimental staged project has five stages:
 
-**WebUI** (for remote/internal network access):
-```bash
-uv sync --extra webui
-uv run webui.py
-```
+1. Chinese recognition
+2. Drama translation and speaking turns
+3. English clone dubbing
+4. Dubbing subtitle calibration
+5. Final composition
 
+The full automated test suite currently passes on macOS Apple Silicon (`489 passed`). Intel macOS, Windows, Linux, CUDA, and first-time model downloads still require verification on their target environments.
 
-**Docker** (containerized deployment):
-```bash
-# Build
-docker build -t pyvideotrans-webui .
+## License
 
-# Run
-docker run -d -p 7860:7860 --name pyvideotrans pyvideotrans-webui
-
-# With persistent config and output
-docker run -d -p 7860:7860 \
-  -v ./data/output:/app/output \
-  -v ./data/config:/app/videotrans \
-  --name pyvideotrans pyvideotrans-webui
-```
-
-> [WebUI documentation](webui.md)
-
-### 5. (Optional) GPU Acceleration Configuration
-
-If you have an NVIDIA graphics card, execute the following commands to install the CUDA-supported PyTorch version:
-
-```bash
-# Uninstall CPU version
-uv remove torch torchaudio
-
-# Install CUDA version (Example for CUDA 12.x)
-uv add torch==2.7 torchaudio==2.7 --index-url https://download.pytorch.org/whl/cu128
-uv add nvidia-cublas-cu12 nvidia-cudnn-cu12
-```
-
-> [AMD GPU acceleration via Whisper.NET](whisper_net_setup.md)
-
----
-
-## 🧩 Supported Channels & Models (Partial)
-
-| Category | Channel/Model | Description |
-| :--- | :--- | :--- |
-| **ASR (Speech Recognition)** | **Faster-Whisper** (Local) | Recommended, fast speed, high accuracy |
-| | WhisperX / Parakeet | Supports timestamp alignment & speaker diarization |
-| | Alibaba Qwen3-ASR / ByteDance Volcano | Online API, excellent for Chinese |
-| **Translation (LLM/MT)** | **DeepSeek** / ChatGPT | Supports context understanding, more natural translation |
-| | MiniMax AI | MiniMax M3 LLM, latest flagship model, OpenAI-compatible |
-| | Google / Microsoft | Traditional machine translation, fast speed |
-| | Ollama / M2M100 | Fully local offline translation |
-| **TTS (Speech Synthesis)** | **Edge-TTS** | Microsoft free interface, natural effect |
-| | **F5-TTS / CosyVoice** | Supports **Voice Cloning**, requires local deployment |
-| | GPT-SoVITS / ChatTTS | High-quality open-source TTS |
-| | 302.AI / OpenAI / Azure | High-quality commercial API |
-
----
-
-## 📚 Documentation & Support
-
-* **Official Documentation**: [https://pyvideotrans.com](https://pyvideotrans.com) (Includes detailed tutorials, API configuration guides, FAQ)
-* **Online Q&A Community**: [https://bbs.pyvideotrans.com](https://bbs.pyvideotrans.com) (Submit error logs for automated AI analysis and answers)
-* **GitHub Wiki**: [architecture.md](architecture.md) | [cli.md](cli.md) | [webui.md](webui.md) | [Synchronize.md](Synchronize.md) | [faq.md](faq.md)
-
-## ⚠️ Disclaimer
-
-This software is an open-source, free, non-commercial project. Users are solely responsible for any legal consequences arising from the use of this software (including but not limited to calling third-party APIs or processing copyrighted video content). Please comply with local laws and regulations and the terms of use of relevant service providers.
-
-## 🙏 Acknowledgements
-
-This project mainly relies on the following open-source projects (partial):
-
-* [FFmpeg](https://github.com/FFmpeg/FFmpeg)
-* [PySide6](https://pypi.org/project/PySide6/)
-* [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx)
-* [faster-whisper](https://github.com/SYSTRAN/faster-whisper)
-* [openai-whisper](https://github.com/openai/whisper)
-* [edge-tts](https://github.com/rany2/edge-tts)
-* [F5-TTS](https://github.com/SWivid/F5-TTS)
-* [Confucius4-TTS](https://github.com/netease-youdao/Confucius4-TTS)
-* [OmniVoice](https://github.com/k2-fsa/omnivoice)
-* [CosyVoice](https://github.com/FunAudioLLM/CosyVoice)
-* [Gradio](https://www.gradio.app/) (WebUI)
-
----
-
-*Created by [jianchang512](https://github.com/jianchang512)*
+This project is licensed under [GPL-v3](../LICENSE). Ensure that you have the right to process the source media and comply with the terms of any external API provider.

@@ -8,7 +8,7 @@
 
 [![License](https://img.shields.io/badge/License-GPL_v3-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10-green.svg)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/tests-490%20passed-brightgreen.svg)](tests)
+[![Tests](https://img.shields.io/badge/tests-489%20passed-brightgreen.svg)](tests)
 
 <img src="videotrans/styles/logo.png" width="560" alt="赚钱音浪">
 
@@ -16,13 +16,12 @@
 
 赚钱音浪基于开源项目 [pyVideoTrans](https://github.com/jianchang512/pyvideotrans) 开发，面向短剧出海配音场景：识别中文对白，结合整集上下文翻译成自然英文，再使用本地 Qwen3-TTS 克隆原演员音色，最终生成英文配音和字幕视频。
 
-项目保留了 pyVideoTrans 原有的视频翻译、字幕处理、语音识别、AI 配音、CLI 和 WebUI 能力，并新增了剧情翻译、人工发言轮次校对、角色声音参考库、独立去硬字幕和 Wiki 分阶段制作能力。
+项目聚焦桌面端短剧字幕翻译主链，并保留必要的字幕处理、CLI 兼容、人工发言轮次校对、角色声音参考库和 Wiki 分阶段制作能力。
 
 ## 核心能力
 
-- **独立去除原视频硬字幕**：把视频中的中文字幕单独擦除并输出干净视频。这个功能可以独立运行，不需要进入整条翻译配音流程；没有硬字幕的视频可以直接跳过。
 - **整集剧情翻译**：不是逐句孤立翻译，而是把整集上下文交给大模型，生成更自然的美式口语对白。
-- **多渠道配音与声音克隆**：可以直接使用项目原有配音渠道；需要本地声音克隆时，再根据电脑性能自行选择 Qwen3-TTS 0.6B 或 1.7B。
+- **本地声音克隆**：根据电脑性能选择 Qwen3-TTS 0.6B 或 1.7B，首次使用时只下载所选模型。
 - **人工校对工作台**：同时查看视频、中文原文、英文字幕、人物建议、情绪和“接上句”关系。
 - **完整发言轮次克隆**：同一角色连续说话时合并克隆，减少短参考音导致的音色漂移和开头瑕疵。
 - **角色声音参考库**：保存同一角色不同情绪的已确认参考音，后续集数可继续复用。
@@ -33,7 +32,6 @@
 
 ```text
 导入中文短剧视频
-  -> 可选：去除原视频硬字幕
   -> 识别并校对中文字幕
   -> 按整集上下文翻译英文对白
   -> 校对人物、情绪、英文字幕和发言轮次
@@ -43,6 +41,8 @@
 ```
 
 翻译错误必须在开始配音前修正。遇到 `A -> B -> A` 的对话时，应人工确认人物和“接上句”，避免把不同角色错误合并成同一段配音。
+
+主仓库不再包含去除原视频硬字幕功能。需要该预处理时，请单独部署[去硬字幕项目](https://github.com/liuyunlong2021-wq/qushuiyin-video-subtitle-remover)，处理完成后再把视频导入赚钱音浪。两个项目由各自的依赖清单管理环境；操作系统已经安装的 FFmpeg 等工具通常无需重复安装，Python 包仍由各自虚拟环境隔离。
 
 ## 小白本地部署教程
 
@@ -349,7 +349,7 @@ uv run sp.py
 
 ### 可选的本地声音模型
 
-安装应用时不需要下载 Qwen3-TTS，先使用项目原有配音渠道即可。需要本地声音克隆时，再根据电脑性能自行选择：配置有限可尝试 0.6B，配置较高并追求质量可尝试 1.7B。只有实际选择本地模型时才需要下载，部署工具不要预先替用户下载。
+安装应用时不会下载 Qwen3-TTS 模型。需要本地声音克隆时，再根据电脑性能选择：默认 `0.6B`，配置较高并追求质量可选择 `1.7B`。只有首次实际使用时才下载所选模型，部署工具不要预先替用户下载。界面中的“内置”表示软件原生支持，不表示模型权重已经放进仓库。
 
 ### 常见安装问题
 
@@ -382,7 +382,7 @@ API Key 只保存在本机配置中。`videotrans/params.json` 和 `videotrans/c
 
 ### 2. 本地声音克隆
 
-本地声音克隆是可选能力，不影响使用项目原有配音渠道。需要时再选择 Qwen3-TTS：电脑性能有限可选择 `0.6B`，性能足够并更看重质量可选择 `1.7B`。模型首次使用时才会下载，下载完成后可在本地执行声音克隆。
+本地声音克隆需要 Qwen3-TTS。默认选择 `0.6B`；性能足够并更看重质量时可选择 `1.7B`。模型首次使用时才会下载，且不会自动下载另一尺寸。
 
 ## 如何选择制作入口
 
@@ -400,12 +400,11 @@ API Key 只保存在本机配置中。`videotrans/params.json` 和 `videotrans/c
 
 这是 Wiki 驱动的分阶段入口，适合按集数保存并分别执行：
 
-1. 去除硬字幕
-2. 中文识别
-3. 剧情翻译
-4. 英文配音
-5. 字幕确认
-6. 最终合成
+1. 中文识别（先选择并导入原视频）
+2. 剧情翻译与轮次
+3. 英文克隆配音
+4. 配音字幕校准
+5. 最终合成
 
 每一步的人工文本写入项目 Wiki，媒体文件放在项目 `.raw/media/`。该入口已经完成短样片和自动测试，但仍保留“实验”标记；正式生产优先使用原完整流程。
 
@@ -428,15 +427,6 @@ uv run cli.py --task vtv --name "./video.mp4" \
 
 完整参数见 [CLI 文档](docs/cli.md)。
 
-### WebUI
-
-```bash
-uv sync --extra webui
-uv run webui.py
-```
-
-WebUI 适合浏览器和局域网访问，但短剧人工校对与本地制作功能以桌面 GUI 最完整。详见 [WebUI 文档](docs/webui.md)。
-
 ## 字幕默认规范
 
 - 字体：华康黑体 W9
@@ -455,9 +445,10 @@ WebUI 适合浏览器和局域网访问，但短剧人工校对与本地制作�
 - Dock 名称、图标、版本和 Bundle ID 验证通过
 - SenseVoice 中文识别通过
 - 整集上下文剧情翻译通过
-- 本地 Qwen3-TTS 1.7B 英文声音克隆通过
+- 本地 Qwen3-TTS 1.7B 英文声音克隆通过；0.6B/1.7B 单选下载合同通过
 - 字幕烧录、音画对齐和最终合成通过
-- 全库自动测试：`490 passed`
+- 全库自动测试：`489 passed`
+- 当前 Git 跟踪内容约 19 MB；模型和 `.venv` 均不进入普通 GitHub 克隆
 
 尚未完成 Intel Mac、Windows、Linux、Docker、CUDA 的本轮真机验收；不同平台首次安装和模型下载仍需单独验证。
 
@@ -473,6 +464,6 @@ WebUI 适合浏览器和局域网访问，但短剧人工校对与本地制作�
 
 ## 开源与致谢
 
-本项目采用 [GPL-v3](LICENSE) 开源协议。赚钱音浪基于 [pyVideoTrans](https://github.com/jianchang512/pyvideotrans) 继续开发，并使用 FFmpeg、PySide6、SenseVoice、Qwen3-TTS、emotion2vec、Faster-Whisper 等开源项目。
+本项目采用 [GPL-v3](LICENSE) 开源协议。赚钱音浪基于 [pyVideoTrans](https://github.com/jianchang512/pyvideotrans) 继续开发，并使用 FFmpeg、PySide6、SenseVoice、Qwen3-TTS 和 emotion2vec 等开源项目。
 
 使用本软件处理视频、音频、字幕或调用第三方 API 时，请确保你拥有相应内容的合法使用权，并遵守所在地法律与服务商条款。
