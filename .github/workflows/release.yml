@@ -65,7 +65,7 @@ jobs:
           file 赚钱音浪.app/Contents/MacOS/launch | grep -q 'x86_64'
       - name: Verify Intel runtime
         run: |
-          brew install ffmpeg libsndfile
+          HOMEBREW_NO_REQUIRE_TAP_TRUST=1 brew install ffmpeg libsndfile
           uv sync --locked
           uv run python -c "import PySide6, torch, onnxruntime; print('Intel runtime: ok')"
       - name: Build Intel ZIP
