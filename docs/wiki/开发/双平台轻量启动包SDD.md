@@ -1,6 +1,6 @@
 # 双平台轻量启动包 SDD
 
-> 状态：v1.0.0 已发布 Windows/macOS 包；v1.0.1 增加 Intel Mac 原生构建与运行环境验证
+> 状态：v1.0.0 已发布 Windows/macOS 包；v1.0.2 增加 Intel Mac 原生构建与运行环境验证
 > 日期：2026-08-01
 
 ## 目标
