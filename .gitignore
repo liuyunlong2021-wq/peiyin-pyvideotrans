@@ -39,6 +39,7 @@ tmp
 images
 logs
 models
+tools/video-subtitle-remover/
 dev
 venv
 chatterbox

@@ -1,13 +1,12 @@
 from pathlib import Path
 import shutil
-from subprocess import CalledProcessError
 from unittest.mock import patch
 
 import pytest
 
 from videotrans.util.production_project import (
     begin_stage, episode_name, import_original_video, isolated_work_dir, publish_file, publish_files,
-    read_states, require_stage, scaffold_project, snapshot_files, subtitle_remover_command, update_stage,
+    project_video, read_states, require_stage, scaffold_project, snapshot_files, update_stage,
     validate_project, verify_snapshot,
 )
 
@@ -19,11 +18,11 @@ def test_scaffold_preserves_existing_wiki_and_updates_board(tmp_path):
 
     scaffold_project(tmp_path, 1)
     scaffold_project(tmp_path, 2)
-    update_stage(tmp_path, 1, "去除硬字幕", "已完成")
+    update_stage(tmp_path, 1, "中文识别", "已完成")
 
     assert existing.read_text(encoding="utf-8") == "# 我的项目\n"
     assert (tmp_path / ".raw/media/视频/第01集").is_dir()
-    assert read_states(tmp_path, 1)["去除硬字幕"][0] == "已完成"
+    assert read_states(tmp_path, 1)["中文识别"][0] == "已完成"
     board = (tmp_path / "wiki/项目看板.md").read_text(encoding="utf-8")
     assert "第01集" in board and "第02集" in board and "已完成" in board
 
@@ -76,6 +75,8 @@ def test_original_video_is_imported_once_and_indexed(tmp_path):
     with pytest.raises(FileExistsError, match="已存在不同的原视频"):
         import_original_video(project, 1, second)
 
+    assert project_video(project, 1) == imported
+
 
 def test_publish_rejects_symlink_escape(tmp_path):
     project, outside = tmp_path / "project", tmp_path / "outside"
@@ -117,9 +118,9 @@ def test_stage_gate_rejects_unconfirmed_and_duplicate_run(tmp_path):
         update_stage(tmp_path, 1, "中文识别", "大概完成")
     with pytest.raises(ValueError, match="需要先达到：已确认"):
         require_stage(tmp_path, 1, "剧情翻译与轮次", ("已确认",))
-    begin_stage(tmp_path, 1, "去除硬字幕")
+    begin_stage(tmp_path, 1, "中文识别")
     with pytest.raises(ValueError, match="处理中"):
-        begin_stage(tmp_path, 1, "去除硬字幕")
+        begin_stage(tmp_path, 1, "中文识别")
 
 
 def test_successful_upstream_change_invalidates_downstream_states(tmp_path):
@@ -174,67 +175,29 @@ def test_group_publish_rolls_back_after_partial_replace(tmp_path):
     assert second.read_bytes() == b"old subtitle"
 
 
-def test_subtitle_remover_command_writes_only_to_work_dir(tmp_path):
-    root = Path(__file__).parents[1]
-    project = tmp_path / "project"
-    work = isolated_work_dir(tmp_path / "tasks", project)
-    output = work / "target/无字幕.mp4"
-
-    tool, command = subtitle_remover_command(root, tmp_path / "input.mp4", output, 1080, 1920)
-
-    assert tool == root / "tools/video-subtitle-remover"
-    assert command[command.index("-o") + 1] == str(output)
-    assert project.as_posix() not in " ".join(command)
-    crop_flag = len(command) - 1 - command[::-1].index("-c")
-    crop = command[crop_flag + 1:command.index("--inpaint-mode")]
-    assert crop == ["960", "1920", "0", "1080"]
-
-
-def test_no_subtitle_is_successful_noop(tmp_path):
-    from videotrans.util.production_project import run_subtitle_remover
-
-    source, output = tmp_path / "input.mp4", tmp_path / "work/output.mp4"
-    source.write_bytes(b"video without subtitles")
-    error = CalledProcessError(1, ["remover"], stderr="Exception: No subtitles detected. Check file")
-
-    with patch("videotrans.util.production_project.subprocess.run", side_effect=error):
-        run_subtitle_remover(Path(__file__).parents[1], source, output, 1080, 1920)
-
-    assert output.read_bytes() == source.read_bytes()
-
-
-def test_project_window_separates_stage_controls_from_subtitle_remover(tmp_path):
+def test_project_window_imports_original_video_before_recognition(tmp_path):
     from PySide6.QtWidgets import QApplication
     from videotrans.winform import fn_production_project
 
     app = QApplication.instance() or QApplication([])
     with patch.object(fn_production_project.params, "get", return_value=""):
         project = fn_production_project.ProductionProjectWindow()
-        remover = fn_production_project.ProductionProjectWindow(remove_only=True)
 
     assert project.table.columnCount() == 4
-    assert project.stage_pages.count() == 6
-    project.select_stage(2)
-    assert project.stage_pages.currentIndex() == 2
-    assert remover.table is None
-    assert remover.stage_pages.count() == 1
+    assert project.stage_pages.count() == 5
+    project.select_stage(1)
+    assert project.stage_pages.currentIndex() == 1
 
     scaffold_project(tmp_path, 1)
     project.project.setText(str(tmp_path))
     project.episode.addItem("第01集")
     project.refresh()
     assert not project.start_recognition.isEnabled()
-    errors = []
-    with patch.object(fn_production_project, "show_error", side_effect=errors.append):
-        project.start_project_recognition()
-    assert errors and "请先在左侧完成去除硬字幕" in errors[0]
 
-    clean_video = tmp_path / ".raw/media/视频/第01集/无字幕.mp4"
-    clean_video.parent.mkdir(parents=True, exist_ok=True)
-    clean_video.write_bytes(b"video")
-    update_stage(tmp_path, 1, "去除硬字幕", "已完成")
+    original = tmp_path / ".raw/media/视频/第01集/原视频.mp4"
+    original.parent.mkdir(parents=True, exist_ok=True)
+    original.write_bytes(b"video")
     project.refresh()
     assert project.start_recognition.isEnabled()
 
     project.close()
-    remover.close()

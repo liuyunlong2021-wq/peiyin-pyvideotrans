@@ -1,7 +1,6 @@
 import os
 import hashlib
 import shutil
-import subprocess
 import uuid
 from contextlib import contextmanager
 from datetime import datetime
@@ -9,7 +8,6 @@ from pathlib import Path
 
 
 STAGES = (
-    ("去除硬字幕", "[无字幕视频](../../../.raw/media/视频/{episode}/无字幕.mp4)"),
     ("中文识别", "[[集数/{episode}/中文识别]]"),
     ("剧情翻译与轮次", "[[集数/{episode}/翻译与轮次]]"),
     ("英文克隆配音", "[[集数/{episode}/英文配音]]"),
@@ -54,7 +52,7 @@ def scaffold_project(root, episode=1):
     _write_missing(wiki / "hot.md", "# 当前重点\n")
     _write_missing(wiki / "log.md", "# 制作日志\n")
     _write_missing(wiki / "来源索引.md", "# 来源索引\n\n| Wiki 文档 | 原始材料 | 说明 |\n|---|---|---|\n")
-    for name in ("去除硬字幕", "识别与翻译", "声音克隆", "字幕与合成"):
+    for name in ("识别与翻译", "声音克隆", "字幕与合成"):
         _write_missing(wiki / "制作规范" / f"{name}.md", f"# {name}\n")
     ensure_episode(root, episode)
     refresh_board(root)
@@ -91,6 +89,15 @@ def import_original_video(root, episode, source):
         index.write_text(
             text.rstrip() + f"\n| [[集数/{episode}/状态]] | {link} | 原始视频 |\n", encoding="utf-8")
     return destination
+
+
+def project_video(root, episode):
+    folder = Path(root) / ".raw/media/视频" / episode_name(episode)
+    for name in ("无字幕.mp4", "原视频.mp4"):
+        path = folder / name
+        if path.is_file():
+            return path
+    return folder / "原视频.mp4"
 
 
 def ensure_episode(root, episode):
@@ -310,35 +317,3 @@ def validate_media(path, video=False, audio=False):
     if audio and info.get("streams_audio", 0) < 1:
         raise ValueError(f"任务产物没有音频流：{path}")
     return info
-
-
-def subtitle_remover_command(root_dir, input_video, output_video, width, height):
-    tool = Path(root_dir) / "tools/video-subtitle-remover"
-    main = tool / "backend/main.py"
-    python = next((p for p in (tool / ".venv/bin/python", tool / "venv/bin/python") if p.is_file()), None)
-    if not main.is_file() or not python:
-        raise FileNotFoundError(f"尚未安装去字幕组件：{tool}")
-    launcher = (
-        "import runpy,sys; from backend.tools import common_tools; "
-        "common_tools.merge_big_file_if_not_exists=lambda *a,**k:None; "
-        "runpy.run_path(sys.argv.pop(1),run_name='__main__')"
-    )
-    return tool, [
-        python.as_posix(), "-c", launcher, main.as_posix(), "-i", str(input_video), "-o", str(output_video),
-        "-c", str(height // 2), str(height), "0", str(width), "--inpaint-mode", "sttn-det",
-    ]
-
-
-def run_subtitle_remover(root_dir, input_video, output_video, width, height):
-    tool, command = subtitle_remover_command(root_dir, input_video, output_video, width, height)
-    env = dict(os.environ, PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK="True")
-    try:
-        subprocess.run(command, cwd=tool, env=env, check=True, text=True, capture_output=True)
-    except subprocess.CalledProcessError as error:
-        details = f"{error.stdout or ''}\n{error.stderr or ''}"
-        if "No subtitles detected" not in details:
-            raise
-        Path(output_video).parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(input_video, output_video)
-    if not Path(output_video).is_file() or Path(output_video).stat().st_size == 0:
-        raise RuntimeError("去字幕任务没有生成有效视频")

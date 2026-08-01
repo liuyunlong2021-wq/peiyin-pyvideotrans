@@ -9,8 +9,8 @@ from videotrans.util.help_ffmpeg import format_video, get_video_duration, get_vi
 from videotrans.util.help_srt import set_ass_font
 from videotrans.util.production_markdown import export_recognition_srt, export_translation_task, read_strict_srt
 from videotrans.util.production_project import (
-    check_cancelled, episode_name, isolated_work_dir, publish_files, require_stage, snapshot_files,
-    stage_execution, update_stage, validate_media, verify_snapshot,
+    check_cancelled, episode_name, isolated_work_dir, project_video, publish_files, require_stage,
+    snapshot_files, stage_execution, update_stage, validate_media, verify_snapshot,
 )
 from videotrans.util.production_markdown import write_calibration_page, write_dubbing_page
 
@@ -114,7 +114,7 @@ def compose_project_video(project, episode, cancelled=None):
     project = Path(project).resolve()
     require_stage(project, episode, "英文克隆配音", ("已完成",))
     require_stage(project, episode, "配音字幕校准", ("已确认",))
-    video = project / ".raw/media/视频" / episode / "无字幕.mp4"
+    video = project_video(project, episode)
     audio = project / ".raw/media/音频" / episode / "英文配音.wav"
     subtitle = project / ".raw/media/文件" / episode / "英文-已确认.srt"
     for path in (video, audio, subtitle):

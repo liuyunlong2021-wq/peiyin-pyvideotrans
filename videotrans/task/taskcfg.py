@@ -170,7 +170,6 @@ class TaskCfgVTT(TaskCfgSTT, TaskCfgTTS, TaskCfgSTS):
     instrument: Union[os.PathLike,str]=None  # 分离出的背景音频
     vocal: Union[os.PathLike,str]=None  # 分离出的人声音频
     clear_cache: bool = False  # 是否清理已存在的文件
-    remove_subtitles: bool = False  # 是否先移除原视频硬字幕
     background_music: Union[os.PathLike,str]=None  # 手动添加的背景音频，整理后的完整路径
     subtitle_type: int = 0  # 软硬字幕嵌入类型 0=不嵌入，1=硬字幕，2=软字幕，3=双硬，4=双软
     only_out_mp4: bool = False  # 是否仅仅输出mp4,仅视频翻译使用

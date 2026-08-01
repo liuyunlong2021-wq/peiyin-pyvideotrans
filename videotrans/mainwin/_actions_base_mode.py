@@ -169,7 +169,6 @@ class WinActionBaseModeMixin:
 
     def disabled_widget(self, type):
         self.main.clear_cache.setDisabled(type)
-        self.main.remove_subtitles.setDisabled(type)
         self.main.volume_rate.setDisabled(type)
         self.main.pitch_rate.setDisabled(type)
         self.main.only_out_mp4.setDisabled(type)

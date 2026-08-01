@@ -145,7 +145,6 @@ class MainWindow(BindSignalsMixin, WinformMixin, LifecycleMixin, QMainWindow, Ui
         self.remove_silent_mid.setChecked(bool(params.get('remove_silent_mid', False)))
         self.align_sub_audio.setChecked(bool(params.get('align_sub_audio', True)))
         self.clear_cache.setChecked(bool(params.get('clear_cache', False)))
-        self.remove_subtitles.setChecked(bool(params.get('remove_subtitles', False)))
         self.enable_cuda.setChecked(bool(params.get('is_cuda', False)))
         self.enable_diariz.setChecked(bool(params.get('enable_diariz', False)))
         self.nums_diariz.setCurrentIndex(int(params.get('nums_diariz', 0)))
