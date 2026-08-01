@@ -19,6 +19,7 @@ def openwin():
 
     def test():
         params["qwenttslocal_prompt"] = winobj.instruct_text.text()
+        params["qwenttslocal_model"] = winobj.model.currentText()
         params.save()
         _rolename = next(reversed(tools.get_f5tts_role().values()))
         if not isinstance(_rolename,dict):
@@ -42,12 +43,14 @@ def openwin():
 
     def save():
         params["qwenttslocal_prompt"] = winobj.instruct_text.text()
+        params["qwenttslocal_model"] = winobj.model.currentText()
         params.save()
         tools.set_process(text='', type="refreshtts")
         winobj.close()
 
     if params.get("qwenttslocal_prompt"):
         winobj.instruct_text.setText(params.get("qwenttslocal_prompt"))
+    winobj.model.setCurrentText(params.get("qwenttslocal_model", "0.6B"))
     winobj.save.clicked.connect(save)
     winobj.test.clicked.connect(test)
     winobj.show()

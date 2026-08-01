@@ -10,13 +10,18 @@ from videotrans.tts._base import BaseTTS
 from videotrans.util.help_misc import vail_file
 
 
+def selected_qwen_model():
+    model = params.get("qwenttslocal_model", "0.6B")
+    return model if model in {"0.6B", "1.7B"} else "0.6B"
+
+
 @dataclass
 class QwenttsLocal(BaseTTS):
     target_language: str = None
     
     def __post_init__(self):
         super().__post_init__()
-        self.model_name="1.7B"
+        self.model_name = selected_qwen_model()
         _langnames = translator.LANG_CODE.get(self.language, [])
         self.target_language = _langnames[9].capitalize() if _langnames and len(_langnames) >= 10 else 'Auto'
 
@@ -65,4 +70,3 @@ class QwenttsLocal(BaseTTS):
                 _ = [i.result() for i in all_task]
             else:
                 self.error="No dubbing audio generate, view logs"
-
