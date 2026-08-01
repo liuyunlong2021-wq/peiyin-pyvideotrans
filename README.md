@@ -57,7 +57,7 @@ https://github.com/liuyunlong2021-wq/peiyin-pyvideotrans
 请直接执行部署，不要只给我教程，并按以下要求操作：
 1. 先检查我的操作系统，以及 Git、uv、FFmpeg 和 libsndfile 是否已经安装，只安装缺少的工具。
 2. 不需要我手动安装 Python；使用 uv 根据项目 pyproject.toml 自动安装 Python 3.10 和全部必需依赖。
-3. 把项目克隆到我的 Documents（文稿）目录，然后在项目根目录执行 uv sync。
+3. Windows 把项目克隆到 D:\peiyin-pyvideotrans；macOS 或 Linux 克隆到 Documents（文稿）目录。进入包含 pyproject.toml 的项目根目录后再执行 uv sync。
 4. 不要修改项目源代码，不要填写或输出任何 API Key。
 5. macOS 安装完成后启动项目根目录的“赚钱音浪.app”；Windows 或 Linux 执行 uv run sp.py。
 6. 如果系统需要管理员权限、电脑密码或安全确认，先明确告诉我应该点击或输入什么。
@@ -225,15 +225,15 @@ winget install --id Gyan.FFmpeg -e
 逐条粘贴并回车：
 
 ```powershell
-cd $HOME\Documents
+cd D:\
 ```
 
 ```powershell
-git clone https://github.com/liuyunlong2021-wq/peiyin-pyvideotrans.git
+git clone https://github.com/liuyunlong2021-wq/peiyin-pyvideotrans.git D:\peiyin-pyvideotrans
 ```
 
 ```powershell
-cd peiyin-pyvideotrans
+cd D:\peiyin-pyvideotrans
 ```
 
 #### 第 5 步：安装项目依赖
@@ -253,11 +253,11 @@ uv run sp.py
 看到“赚钱音浪 1.0.0”主窗口就表示部署成功。以后启动只需要打开 PowerShell，并依次执行：
 
 ```powershell
-cd $HOME\Documents\peiyin-pyvideotrans
+cd D:\peiyin-pyvideotrans
 uv run sp.py
 ```
 
-建议把项目放在较短的英文路径中，不要随意移动项目里的文件。
+项目必须放在包含 `pyproject.toml` 的目录中；建议使用这个较短的英文路径，不要只在 `D:\` 根目录执行 `uv sync`。
 
 </details>
 
@@ -355,6 +355,7 @@ uv run sp.py
 
 - **提示 `command not found` 或“无法识别为命令”**：对应工具没有安装成功，或安装后没有重新打开终端。先重新打开终端，再检查版本。
 - **`uv sync` 下载中断**：保持网络连接，在项目目录重新执行 `uv sync`，已经下载的内容通常不需要从头开始。
+- **PowerShell 提示 `No pyproject.toml found`**：当前目录不是项目根目录。Windows 默认安装到 `D:\peiyin-pyvideotrans`，先执行 `cd D:\peiyin-pyvideotrans`，确认 `dir pyproject.toml` 能看到文件，再执行 `uv sync`。如果还没有克隆项目，执行 `git clone https://github.com/liuyunlong2021-wq/peiyin-pyvideotrans.git D:\peiyin-pyvideotrans`。
 - **macOS 提示无法验证开发者**：在访达中右键应用选择“打开”，再确认一次；不要把 `.app` 单独移出项目目录。
 - **双击 `.app` 提示需要先完成本地部署**：在该项目根目录执行 `uv sync`，并确认项目中已经生成 `.venv` 目录。
 - **选择本地 Qwen3-TTS 后首次配音等待很久**：软件可能正在下载所选模型。保持网络连接；下载完成后不会重复下载。

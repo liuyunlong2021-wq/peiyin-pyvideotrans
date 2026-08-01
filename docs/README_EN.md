@@ -29,6 +29,8 @@ uv sync
 uv run sp.py
 ```
 
+On Windows, use a project directory such as `D:\peiyin-pyvideotrans` and run `uv sync` there. `uv sync` must be run from the directory that contains `pyproject.toml`, not from `D:\` itself.
+
 On macOS, after `uv sync`, you can also open `赚钱音浪.app` from the repository root. The app uses the repository's `.venv`; it does not bundle Python, dependencies, or model weights.
 
 Configure the cloud API URL and key locally in Settings. Do not commit API keys or include them in logs and issues.
