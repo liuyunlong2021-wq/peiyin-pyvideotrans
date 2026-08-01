@@ -20,6 +20,8 @@ Hard-subtitle removal is not included in this repository. Use the separate [subt
 
 ## Source Installation
 
+The simplest installation is to download `赚钱音浪-Windows.zip` or `赚钱音浪-macOS.zip` from [GitHub Releases](https://github.com/liuyunlong2021-wq/peiyin-pyvideotrans/releases/latest), extract it, and open the launcher. The first launch prepares Python and runtime dependencies automatically. Model weights are still downloaded separately from the Qwen3-TTS settings.
+
 Install Git, `uv`, FFmpeg, and libsndfile, then run:
 
 ```bash
@@ -51,7 +53,7 @@ The experimental staged project has five stages:
 4. Dubbing subtitle calibration
 5. Final composition
 
-The full automated test suite currently passes on macOS Apple Silicon (`489 passed`). Intel macOS, Windows, Linux, CUDA, and first-time model downloads still require verification on their target environments.
+The full automated test suite currently passes on macOS Apple Silicon (`490 passed`). Intel macOS, Windows, Linux, CUDA, and first-time model downloads still require verification on their target environments.
 
 ## License
 

@@ -19,6 +19,13 @@ static int deployment_alert(void) {
     return 1;
 }
 
+static int bootstrap(const char *repo) {
+    char script[PATH_MAX];
+    snprintf(script, sizeof(script), "%s/scripts/bootstrap-macos.sh", repo);
+    execl("/usr/bin/open", "open", "-a", "Terminal", script, NULL);
+    return deployment_alert();
+}
+
 int main(void) {
     char executable[PATH_MAX], executable_dir[PATH_MAX], repo_candidate[PATH_MAX];
     char repo[PATH_MAX], venv_python[PATH_MAX], python_real[PATH_MAX];
@@ -34,7 +41,7 @@ int main(void) {
 
     snprintf(venv_python, sizeof(venv_python), "%s/.venv/bin/python", repo);
     if (!realpath(venv_python, python_real))
-        return deployment_alert();
+        return bootstrap(repo);
 
     snprintf(python_copy, sizeof(python_copy), "%s", python_real);
     snprintf(python_base, sizeof(python_base), "%s", dirname(dirname(python_copy)));

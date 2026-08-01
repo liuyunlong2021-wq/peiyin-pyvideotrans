@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from videotrans.tts._qwenttslocal import QwenttsLocal, selected_qwen_model
+from videotrans.tts._qwenttslocal import QwenttsLocal, download_qwen_base, selected_qwen_model
 
 
 def test_qwen_local_uses_selected_model_and_downloads_only_its_base():
@@ -19,3 +19,14 @@ def test_qwen_local_uses_selected_model_and_downloads_only_its_base():
         assert selected_qwen_model() == "1.7B"
     with patch("videotrans.tts._qwenttslocal.params.get", return_value="unknown"):
         assert selected_qwen_model() == "0.6B"
+
+
+def test_download_button_downloads_only_selected_base_model():
+    with patch("videotrans.tts._qwenttslocal.defaulelang", "zh"), patch(
+        "videotrans.util.help_down.check_and_down_ms"
+    ) as download:
+        local_dir = download_qwen_base("1.7B")
+
+    assert local_dir.endswith("Qwen3-TTS-12Hz-1.7B-Base")
+    download.assert_called_once()
+    assert download.call_args.args[0] == "Qwen/Qwen3-TTS-12Hz-1.7B-Base"

@@ -47,6 +47,10 @@ class Ui_qwenttslocal(object):
         self.test.setObjectName("test")
         self.test.setMinimumSize(QSize(0, 35))
 
+        self.download = QPushButton()
+        self.download.setObjectName("download")
+        self.download.setMinimumSize(QSize(0, 35))
+
         help_btn = QtWidgets.QPushButton()
         help_btn.setMinimumSize(QtCore.QSize(0, 35))
         help_btn.setStyleSheet("background-color: rgba(255, 255, 255,0)")
@@ -56,6 +60,7 @@ class Ui_qwenttslocal(object):
         help_btn.clicked.connect(lambda: open_url(url='https://pyvideotrans.com/qwen-tts'))
 
         h2.addWidget(self.save)
+        h2.addWidget(self.download)
         h2.addWidget(self.test)
 
         ref_btn = QtWidgets.QPushButton()
@@ -75,4 +80,5 @@ class Ui_qwenttslocal(object):
     def retranslateUi(self, qwenttslocal):
         qwenttslocal.setWindowTitle(f"Qwen3-TTS {tr('Local')}")
         self.save.setText(tr("Save"))
+        self.download.setText('下载所选模型' if defaulelang == 'zh' else 'Download selected model')
         self.test.setText(tr("Test"))

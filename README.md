@@ -46,6 +46,17 @@
 
 ## 小白本地部署教程
 
+### 最简单方法：下载桌面启动包
+
+打开 [GitHub Releases](https://github.com/liuyunlong2021-wq/peiyin-pyvideotrans/releases/latest)，下载对应系统的文件：
+
+- Windows：`赚钱音浪-Windows.zip`
+- macOS：`赚钱音浪-macOS.zip`
+
+解压后双击 `赚钱音浪.exe` 或 `赚钱音浪.app`。首次启动会自动准备 Python 3.10 和运行依赖，需要保持联网并等待完成；以后双击即可启动，不需要手动执行 Git、`uv sync` 或安装 Python。
+
+发布包不包含模型。进入软件后，在 Qwen3-TTS 设置中选择 `0.6B` 或 `1.7B`，点击“下载所选模型”；软件只下载当前选择的模型。
+
 ### 推荐方法：让 AI 工具一键部署
 
 电脑上已经安装 [Codex](https://openai.com/codex/) 或 Claude Code 的用户，打开工具后，把下面整段指令复制进去并发送。AI 会检查电脑环境、安装缺少的工具、下载项目并启动应用：
@@ -448,7 +459,7 @@ uv run cli.py --task vtv --name "./video.mp4" \
 - 整集上下文剧情翻译通过
 - 本地 Qwen3-TTS 1.7B 英文声音克隆通过；0.6B/1.7B 单选下载合同通过
 - 字幕烧录、音画对齐和最终合成通过
-- 全库自动测试：`489 passed`
+- 全库自动测试：`490 passed`
 - 当前 Git 跟踪内容约 19 MB；模型和 `.venv` 均不进入普通 GitHub 克隆
 
 尚未完成 Intel Mac、Windows、Linux、Docker、CUDA 的本轮真机验收；不同平台首次安装和模型下载仍需单独验证。

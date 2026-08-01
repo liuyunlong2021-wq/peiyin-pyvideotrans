@@ -15,6 +15,16 @@ def selected_qwen_model():
     return model if model in {"0.6B", "1.7B"} else "0.6B"
 
 
+def download_qwen_base(model_name, callback=None):
+    from videotrans.util import help_down
+    local_dir = f'{ROOT_DIR}/models/models--Qwen--Qwen3-TTS-12Hz-{model_name}-Base'
+    if defaulelang == 'zh':
+        help_down.check_and_down_ms(f'Qwen/Qwen3-TTS-12Hz-{model_name}-Base', callback=callback, local_dir=local_dir)
+    else:
+        help_down.check_and_down_hf(model_id=f'Qwen3-TTS-12Hz-{model_name}-Base', repo_id=f'Qwen/Qwen3-TTS-12Hz-{model_name}-Base', local_dir=local_dir, callback=callback)
+    return local_dir
+
+
 @dataclass
 class QwenttsLocal(BaseTTS):
     target_language: str = None
@@ -29,8 +39,7 @@ class QwenttsLocal(BaseTTS):
     def _download(self):
         from videotrans.util import help_down
         if defaulelang == 'zh':
-            self.local_dir=f'{ROOT_DIR}/models/models--Qwen--Qwen3-TTS-12Hz-{self.model_name}-Base'
-            help_down.check_and_down_ms(f'Qwen/Qwen3-TTS-12Hz-{self.model_name}-Base',callback=self._process_callback,local_dir=self.local_dir)
+            self.local_dir = download_qwen_base(self.model_name, self._process_callback)
             
             if any(item.get('role') in {"Vivian", "Serena", "Uncle_fu", "Dylan", "Eric", "Ryan", "Aiden", "Ono_anna", "Sohee"} for item in self.queue_tts):
                 self.local_dir=f'{ROOT_DIR}/models/models--Qwen--Qwen3-TTS-12Hz-{self.model_name}-CustomVoice'
