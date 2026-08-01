@@ -25,11 +25,11 @@ jobs:
           Copy-Item 赚钱音浪.exe $env:RUNNER_TEMP\赚钱音浪-Windows\赚钱音浪.exe
           if (-not (Test-Path $env:RUNNER_TEMP\赚钱音浪-Windows\pyproject.toml) -or -not (Test-Path $env:RUNNER_TEMP\赚钱音浪-Windows\赚钱音浪.exe)) { throw 'Windows package is incomplete' }
           if ((Test-Path $env:RUNNER_TEMP\赚钱音浪-Windows\.venv) -or (Test-Path $env:RUNNER_TEMP\赚钱音浪-Windows\models)) { throw 'Windows package contains local runtime data' }
-          Compress-Archive $env:RUNNER_TEMP\赚钱音浪-Windows $env:RUNNER_TEMP\赚钱音浪-Windows.zip
+          Compress-Archive $env:RUNNER_TEMP\赚钱音浪-Windows $env:RUNNER_TEMP\ZhuanqianYinlang-Windows.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: 赚钱音浪-Windows
-          path: ${{ runner.temp }}/赚钱音浪-Windows.zip
+          name: ZhuanqianYinlang-Windows
+          path: ${{ runner.temp }}/ZhuanqianYinlang-Windows.zip
 
   macos:
     runs-on: macos-latest
@@ -48,11 +48,11 @@ jobs:
           test -x "$ROOT/赚钱音浪.app/Contents/MacOS/launch"
           test ! -e "$ROOT/.venv"
           test ! -e "$ROOT/models"
-          ditto -c -k --sequesterRsrc --keepParent "$ROOT" "$RUNNER_TEMP/赚钱音浪-macOS.zip"
+          ditto -c -k --sequesterRsrc --keepParent "$ROOT" "$RUNNER_TEMP/ZhuanqianYinlang-macOS.zip"
       - uses: actions/upload-artifact@v4
         with:
-          name: 赚钱音浪-macOS
-          path: ${{ runner.temp }}/赚钱音浪-macOS.zip
+          name: ZhuanqianYinlang-macOS
+          path: ${{ runner.temp }}/ZhuanqianYinlang-macOS.zip
 
   release:
     if: startsWith(github.ref, 'refs/tags/')

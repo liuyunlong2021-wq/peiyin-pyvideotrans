@@ -50,8 +50,8 @@
 
 打开 [GitHub Releases](https://github.com/liuyunlong2021-wq/peiyin-pyvideotrans/releases/latest)，下载对应系统的文件：
 
-- Windows：`赚钱音浪-Windows.zip`
-- macOS：`赚钱音浪-macOS.zip`
+- Windows：`ZhuanqianYinlang-Windows.zip`
+- macOS：`ZhuanqianYinlang-macOS.zip`
 
 解压后双击 `赚钱音浪.exe` 或 `赚钱音浪.app`。首次启动会自动准备 Python 3.10 和运行依赖，需要保持联网并等待完成；以后双击即可启动，不需要手动执行 Git、`uv sync` 或安装 Python。
 
